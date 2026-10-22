@@ -38,14 +38,19 @@ import {
   FileText,
   ChevronRight,
   X,
-  ChevronDown
+  ChevronDown,
+  Palette,
+  Monitor,
+  Smartphone,
+  Sliders
 } from "lucide-react";
 import { ProductItem, CustomerOrder, ProductCategory } from "@/types/store";
 import { AdminStore, AdminStoreSettings, DEFAULT_SETTINGS } from "@/lib/adminStore";
 import { SITE_CONFIG, getProductSlug } from "@/lib/seoEngine";
 import { CATEGORIES_LIST } from "@/lib/catalogService";
+import { ThemeService, ThemeConfig, DEFAULT_THEME_CONFIG } from "@/lib/themeConfig";
 
-type AdminTab = "dashboard" | "products" | "orders" | "seo" | "settings";
+type AdminTab = "dashboard" | "products" | "orders" | "editor" | "seo" | "settings";
 
 const AVAILABLE_SIZES = [
   "XS (34)", "S (36)", "M (38)", "L (40)", "XL (42)", "XXL (44)", "3XL (46)",
@@ -81,6 +86,9 @@ export default function AdminPage() {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [orderStatusFilter, setOrderStatusFilter] = useState<string>("all");
+  const [theme, setTheme] = useState<ThemeConfig>(DEFAULT_THEME_CONFIG);
+  const [previewDevice, setPreviewDevice] = useState<"desktop" | "mobile">("desktop");
+  const [editorSavedNotice, setEditorSavedNotice] = useState<boolean>(false);
 
   // Modals
   const [isProductModalOpen, setIsProductModalOpen] = useState<boolean>(false);
@@ -101,6 +109,20 @@ export default function AdminPage() {
     setProducts(AdminStore.getProducts());
     setOrders(AdminStore.getOrders());
     setSettings(AdminStore.getSettings());
+    setTheme(ThemeService.getTheme());
+  };
+
+  const handleSaveTheme = () => {
+    ThemeService.saveTheme(theme);
+    setEditorSavedNotice(true);
+    setTimeout(() => setEditorSavedNotice(false), 3000);
+  };
+
+  const handleResetTheme = () => {
+    if (confirm("Reset website theme to default settings?")) {
+      ThemeService.resetTheme();
+      setTheme(DEFAULT_THEME_CONFIG);
+    }
   };
 
   const handleLogin = (e: React.FormEvent) => {
@@ -442,6 +464,18 @@ For any tailoring or exchange questions, call us directly at ${settings.phone}.`
             </button>
 
             <button
+              onClick={() => setActiveTab("editor")}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold transition ${
+                activeTab === "editor"
+                  ? "bg-[#2d3139] text-white shadow-sm"
+                  : "text-stone-400 hover:bg-stone-800 hover:text-stone-200"
+              }`}
+            >
+              <Palette className="w-4 h-4 text-pink-400" />
+              <span>Website Theme Editor</span>
+            </button>
+
+            <button
               onClick={() => setActiveTab("seo")}
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold transition ${
                 activeTab === "seo"
@@ -506,6 +540,8 @@ For any tailoring or exchange questions, call us directly at ${settings.phone}.`
               {activeTab === "dashboard" && "Store Dashboard"}
               {activeTab === "products" && "Product Catalog & Inventory"}
               {activeTab === "orders" && "Customer Orders & Shipments"}
+              {activeTab === "editor" && "Website Theme & Content Customizer"}
+              {activeTab === "editor" && "Website Theme & Content Customizer"}
               {activeTab === "seo" && "AEO, GEO & SEO Optimization Hub"}
               {activeTab === "settings" && "Store & Showroom Settings"}
             </h2>
@@ -553,6 +589,12 @@ For any tailoring or exchange questions, call us directly at ${settings.phone}.`
             className={`px-2 py-1 ${activeTab === "products" ? "text-white font-bold" : ""}`}
           >
             Products
+          </button>
+          <button
+            onClick={() => setActiveTab("editor")}
+            className={`px-2 py-1 ${activeTab === "editor" ? "text-white font-bold" : ""}`}
+          >
+            Theme Editor
           </button>
           <button
             onClick={() => setActiveTab("seo")}
@@ -1032,6 +1074,567 @@ For any tailoring or exchange questions, call us directly at ${settings.phone}.`
         )}
 
         {/* --------------------------------------------------------- */}
+        
+        {/* --------------------------------------------------------- */}
+        {/* TAB: WEBSITE THEME & CONTENT EDITOR (SHOPIFY CUSTOMIZER) */}
+        {/* --------------------------------------------------------- */}
+        {activeTab === "editor" && (
+          <main className="p-6 space-y-6">
+            {/* Top Toolbar */}
+            <div className="bg-white p-4 rounded-xl border border-stone-200 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-pink-50 text-pink-700 rounded-lg">
+                  <Palette className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-sm text-stone-900">Online Store Visual Theme Customizer</h3>
+                  <p className="text-xs text-stone-500">Edit hero banners, announcements, guarantees & promo offers live</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <div className="bg-stone-100 p-1 rounded-lg flex items-center">
+                  <button
+                    onClick={() => setPreviewDevice("desktop")}
+                    className={`px-2.5 py-1 text-xs font-bold rounded flex items-center gap-1 transition ${
+                      previewDevice === "desktop" ? "bg-white text-stone-900 shadow-xs" : "text-stone-500 hover:text-stone-800"
+                    }`}
+                  >
+                    <Monitor className="w-3.5 h-3.5" />
+                    <span>Desktop</span>
+                  </button>
+                  <button
+                    onClick={() => setPreviewDevice("mobile")}
+                    className={`px-2.5 py-1 text-xs font-bold rounded flex items-center gap-1 transition ${
+                      previewDevice === "mobile" ? "bg-white text-stone-900 shadow-xs" : "text-stone-500 hover:text-stone-800"
+                    }`}
+                  >
+                    <Smartphone className="w-3.5 h-3.5" />
+                    <span>Mobile</span>
+                  </button>
+                </div>
+
+                <button
+                  onClick={handleResetTheme}
+                  className="px-3 py-1.5 bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-semibold rounded-lg transition"
+                >
+                  Reset Defaults
+                </button>
+
+                <button
+                  onClick={handleSaveTheme}
+                  className="px-4 py-1.5 bg-[#a81c24] hover:bg-[#8f171e] text-white text-xs font-bold uppercase rounded-lg transition flex items-center gap-1.5 shadow-xs"
+                >
+                  <Check className="w-4 h-4" />
+                  <span>Publish to Website</span>
+                </button>
+              </div>
+            </div>
+
+            {editorSavedNotice && (
+              <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs font-semibold flex items-center justify-between">
+                <span>🎉 Changes published successfully! The live website is updated with your new theme settings.</span>
+                <Link href="/" target="_blank" className="underline font-bold">
+                  View Live Site ↗
+                </Link>
+              </div>
+            )}
+
+            {/* Split Editor & Preview Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+              {/* Left Column: Form Controls (5 Cols) */}
+              <div className="lg:col-span-5 space-y-5">
+                {/* Section 1: Announcement Bar */}
+                <div className="bg-white p-5 rounded-xl border border-stone-200 shadow-xs space-y-4">
+                  <div className="flex items-center justify-between border-b border-stone-100 pb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-base">📢</span>
+                      <h4 className="font-bold text-xs uppercase tracking-wider text-stone-900">
+                        Top Announcement Strip
+                      </h4>
+                    </div>
+                    <label className="flex items-center gap-2 text-xs font-semibold text-stone-600 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={theme.announcement.enabled}
+                        onChange={(e) =>
+                          setTheme({
+                            ...theme,
+                            announcement: { ...theme.announcement, enabled: e.target.checked },
+                          })
+                        }
+                        className="rounded text-[#a81c24] focus:ring-[#a81c24]"
+                      />
+                      <span>Active</span>
+                    </label>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-semibold text-stone-700 mb-1">
+                      Primary Message
+                    </label>
+                    <input
+                      type="text"
+                      value={theme.announcement.text}
+                      onChange={(e) =>
+                        setTheme({
+                          ...theme,
+                          announcement: { ...theme.announcement, text: e.target.value },
+                        })
+                      }
+                      className="w-full px-3 py-2 text-xs bg-stone-50 border border-stone-300 rounded-lg focus:outline-none focus:border-[#a81c24]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-semibold text-stone-700 mb-1">
+                      Secondary Ticker Text
+                    </label>
+                    <input
+                      type="text"
+                      value={theme.announcement.secondaryText}
+                      onChange={(e) =>
+                        setTheme({
+                          ...theme,
+                          announcement: { ...theme.announcement, secondaryText: e.target.value },
+                        })
+                      }
+                      className="w-full px-3 py-2 text-xs bg-stone-50 border border-stone-300 rounded-lg focus:outline-none focus:border-[#a81c24]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-semibold text-stone-700 mb-1">
+                      Background Color Theme
+                    </label>
+                    <div className="flex items-center gap-2">
+                      {[
+                        { name: "Crimson Red", color: "#a81c24" },
+                        { name: "Royal Maroon", color: "#701a28" },
+                        { name: "Luxury Emerald", color: "#064e3b" },
+                        { name: "Warm Gold", color: "#b45309" },
+                        { name: "Midnight Charcoal", color: "#18181b" },
+                      ].map((c) => (
+                        <button
+                          key={c.color}
+                          type="button"
+                          onClick={() =>
+                            setTheme({
+                              ...theme,
+                              announcement: { ...theme.announcement, bgColor: c.color },
+                            })
+                          }
+                          title={c.name}
+                          style={{ backgroundColor: c.color }}
+                          className={`w-6 h-6 rounded-full border-2 transition ${
+                            theme.announcement.bgColor === c.color ? "border-white ring-2 ring-stone-900" : "border-transparent"
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section 2: Hero Lifestyle Banner */}
+                <div className="bg-white p-5 rounded-xl border border-stone-200 shadow-xs space-y-4">
+                  <div className="border-b border-stone-100 pb-3 flex items-center gap-2">
+                    <span className="text-base">👑</span>
+                    <h4 className="font-bold text-xs uppercase tracking-wider text-stone-900">
+                      Hero Lifestyle Banner
+                    </h4>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-semibold text-stone-700 mb-1">
+                      Badge Pill Text
+                    </label>
+                    <input
+                      type="text"
+                      value={theme.hero.badge}
+                      onChange={(e) =>
+                        setTheme({ ...theme, hero: { ...theme.hero, badge: e.target.value } })
+                      }
+                      className="w-full px-3 py-2 text-xs bg-stone-50 border border-stone-300 rounded-lg focus:outline-none focus:border-[#a81c24]"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-semibold text-stone-700 mb-1">
+                        Main Title
+                      </label>
+                      <input
+                        type="text"
+                        value={theme.hero.headline}
+                        onChange={(e) =>
+                          setTheme({ ...theme, hero: { ...theme.hero, headline: e.target.value } })
+                        }
+                        className="w-full px-3 py-2 text-xs bg-stone-50 border border-stone-300 rounded-lg focus:outline-none focus:border-[#a81c24]"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-semibold text-stone-700 mb-1">
+                        Sub-headline
+                      </label>
+                      <input
+                        type="text"
+                        value={theme.hero.subheadline}
+                        onChange={(e) =>
+                          setTheme({ ...theme, hero: { ...theme.hero, subheadline: e.target.value } })
+                        }
+                        className="w-full px-3 py-2 text-xs bg-stone-50 border border-stone-300 rounded-lg focus:outline-none focus:border-[#a81c24]"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-semibold text-stone-700 mb-1">
+                      Subtitle Description
+                    </label>
+                    <textarea
+                      rows={2}
+                      value={theme.hero.description}
+                      onChange={(e) =>
+                        setTheme({ ...theme, hero: { ...theme.hero, description: e.target.value } })
+                      }
+                      className="w-full px-3 py-2 text-xs bg-stone-50 border border-stone-300 rounded-lg focus:outline-none focus:border-[#a81c24]"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-semibold text-stone-700 mb-1">
+                        Primary Button Text
+                      </label>
+                      <input
+                        type="text"
+                        value={theme.hero.primaryBtnText}
+                        onChange={(e) =>
+                          setTheme({
+                            ...theme,
+                            hero: { ...theme.hero, primaryBtnText: e.target.value },
+                          })
+                        }
+                        className="w-full px-3 py-2 text-xs bg-stone-50 border border-stone-300 rounded-lg focus:outline-none focus:border-[#a81c24]"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-semibold text-stone-700 mb-1">
+                        Secondary Button Text
+                      </label>
+                      <input
+                        type="text"
+                        value={theme.hero.secondaryBtnText}
+                        onChange={(e) =>
+                          setTheme({
+                            ...theme,
+                            hero: { ...theme.hero, secondaryBtnText: e.target.value },
+                          })
+                        }
+                        className="w-full px-3 py-2 text-xs bg-stone-50 border border-stone-300 rounded-lg focus:outline-none focus:border-[#a81c24]"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-semibold text-stone-700 mb-1">
+                      Featured Model Photoshoot Images
+                    </label>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] text-stone-500 w-14 shrink-0 font-bold">Image 1:</span>
+                        <input
+                          type="text"
+                          value={theme.hero.modelImage1}
+                          onChange={(e) =>
+                            setTheme({
+                              ...theme,
+                              hero: { ...theme.hero, modelImage1: e.target.value },
+                            })
+                          }
+                          className="w-full px-2.5 py-1.5 text-xs bg-stone-50 border border-stone-300 rounded-md focus:outline-none"
+                        />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] text-stone-500 w-14 shrink-0 font-bold">Center:</span>
+                        <input
+                          type="text"
+                          value={theme.hero.modelImage2}
+                          onChange={(e) =>
+                            setTheme({
+                              ...theme,
+                              hero: { ...theme.hero, modelImage2: e.target.value },
+                            })
+                          }
+                          className="w-full px-2.5 py-1.5 text-xs bg-stone-50 border border-stone-300 rounded-md focus:outline-none"
+                        />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] text-stone-500 w-14 shrink-0 font-bold">Image 3:</span>
+                        <input
+                          type="text"
+                          value={theme.hero.modelImage3}
+                          onChange={(e) =>
+                            setTheme({
+                              ...theme,
+                              hero: { ...theme.hero, modelImage3: e.target.value },
+                            })
+                          }
+                          className="w-full px-2.5 py-1.5 text-xs bg-stone-50 border border-stone-300 rounded-md focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section 3: Trust Strip */}
+                <div className="bg-white p-5 rounded-xl border border-stone-200 shadow-xs space-y-4">
+                  <div className="border-b border-stone-100 pb-3 flex items-center gap-2">
+                    <span className="text-base">🛡️</span>
+                    <h4 className="font-bold text-xs uppercase tracking-wider text-stone-900">
+                      Trust Badges & Guarantees Strip
+                    </h4>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div>
+                      <label className="block text-[10px] font-bold text-stone-500 uppercase mb-0.5">Pillar 1</label>
+                      <input
+                        type="text"
+                        value={theme.trustStrip.item1}
+                        onChange={(e) =>
+                          setTheme({
+                            ...theme,
+                            trustStrip: { ...theme.trustStrip, item1: e.target.value },
+                          })
+                        }
+                        className="w-full px-3 py-1.5 text-xs bg-stone-50 border border-stone-300 rounded-lg"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-stone-500 uppercase mb-0.5">Pillar 2</label>
+                      <input
+                        type="text"
+                        value={theme.trustStrip.item2}
+                        onChange={(e) =>
+                          setTheme({
+                            ...theme,
+                            trustStrip: { ...theme.trustStrip, item2: e.target.value },
+                          })
+                        }
+                        className="w-full px-3 py-1.5 text-xs bg-stone-50 border border-stone-300 rounded-lg"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-stone-500 uppercase mb-0.5">Pillar 3</label>
+                      <input
+                        type="text"
+                        value={theme.trustStrip.item3}
+                        onChange={(e) =>
+                          setTheme({
+                            ...theme,
+                            trustStrip: { ...theme.trustStrip, item3: e.target.value },
+                          })
+                        }
+                        className="w-full px-3 py-1.5 text-xs bg-stone-50 border border-stone-300 rounded-lg"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-stone-500 uppercase mb-0.5">Pillar 4</label>
+                      <input
+                        type="text"
+                        value={theme.trustStrip.item4}
+                        onChange={(e) =>
+                          setTheme({
+                            ...theme,
+                            trustStrip: { ...theme.trustStrip, item4: e.target.value },
+                          })
+                        }
+                        className="w-full px-3 py-1.5 text-xs bg-stone-50 border border-stone-300 rounded-lg"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section 4: Homepage Section Titles */}
+                <div className="bg-white p-5 rounded-xl border border-stone-200 shadow-xs space-y-4">
+                  <div className="border-b border-stone-100 pb-3 flex items-center gap-2">
+                    <span className="text-base">🛍️</span>
+                    <h4 className="font-bold text-xs uppercase tracking-wider text-stone-900">
+                      Product Section Headlines
+                    </h4>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-semibold text-stone-700 mb-1">
+                      Section 1 Title (Kurtis & Suits)
+                    </label>
+                    <input
+                      type="text"
+                      value={theme.sections.section1Title}
+                      onChange={(e) =>
+                        setTheme({
+                          ...theme,
+                          sections: { ...theme.sections, section1Title: e.target.value },
+                        })
+                      }
+                      className="w-full px-3 py-1.5 text-xs bg-stone-50 border border-stone-300 rounded-lg"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-semibold text-stone-700 mb-1">
+                      Section 2 Title (Sarees & Lehengas)
+                    </label>
+                    <input
+                      type="text"
+                      value={theme.sections.section2Title}
+                      onChange={(e) =>
+                        setTheme({
+                          ...theme,
+                          sections: { ...theme.sections, section2Title: e.target.value },
+                        })
+                      }
+                      className="w-full px-3 py-1.5 text-xs bg-stone-50 border border-stone-300 rounded-lg"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Column: Live Mockup Preview (7 Cols) */}
+              <div className="lg:col-span-7 sticky top-20 space-y-3">
+                <div className="flex items-center justify-between text-xs font-bold text-stone-500 uppercase px-1">
+                  <span>Live Interactive Preview</span>
+                  <span className="text-emerald-700 font-semibold text-[11px]">● Auto-reflecting changes</span>
+                </div>
+
+                {/* Browser Frame */}
+                <div
+                  className={`bg-white rounded-2xl border-2 border-stone-300 shadow-xl overflow-hidden transition-all duration-300 mx-auto ${
+                    previewDevice === "mobile" ? "max-w-[390px]" : "w-full"
+                  }`}
+                >
+                  {/* Browser Address Bar */}
+                  <div className="bg-stone-100 border-b border-stone-200 px-3 py-2 flex items-center gap-2">
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-2.5 h-2.5 rounded-full bg-red-400" />
+                      <span className="w-2.5 h-2.5 rounded-full bg-amber-400" />
+                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
+                    </div>
+                    <div className="flex-1 bg-white border border-stone-200 rounded-md px-2.5 py-0.5 text-[10px] text-stone-600 font-mono text-center truncate">
+                      🔒 https://rajnandiniboutique.com
+                    </div>
+                  </div>
+
+                  {/* Live Rendered Canvas */}
+                  <div className="bg-white overflow-y-auto max-h-[750px] text-stone-900 select-none">
+                    {/* Live Announcement */}
+                    {theme.announcement.enabled && (
+                      <div
+                        style={{ backgroundColor: theme.announcement.bgColor || "#a81c24" }}
+                        className="text-white text-[9px] sm:text-[10px] font-semibold py-1 px-3 text-center transition-colors"
+                      >
+                        <span>{theme.announcement.text}</span>
+                      </div>
+                    )}
+
+                    {/* Mini Navbar Mockup */}
+                    <div className="p-3 border-b border-stone-100 flex items-center justify-between">
+                      <Image
+                        src="/logo.png"
+                        alt="Rajnandini"
+                        width={120}
+                        height={50}
+                        className="h-8 w-auto object-contain"
+                      />
+                      <div className="flex items-center gap-2 text-[10px] font-bold text-stone-600">
+                        <span>KURTIS</span>
+                        <span>SAREES</span>
+                        <span>LEHENGAS</span>
+                      </div>
+                    </div>
+
+                    {/* Live Hero Banner */}
+                    <div className="p-4 bg-[#fdfaf7] border-b border-stone-100">
+                      <div className="rounded-xl p-5 bg-gradient-to-r from-[#fae8dc] via-[#fdf6f0] to-[#e8f1f5] border border-stone-200/60 relative overflow-hidden">
+                        <div className="relative z-10 space-y-2 max-w-xs">
+                          {theme.hero.badge && (
+                            <span className="inline-block bg-[#a81c24] text-white text-[9px] font-bold px-2 py-0.5 rounded-full">
+                              {theme.hero.badge}
+                            </span>
+                          )}
+                          <h2 className="font-serif text-xl sm:text-2xl font-black text-stone-900 leading-tight">
+                            {theme.hero.headline} <br />
+                            <span className="text-[#a81c24] font-normal italic">
+                              {theme.hero.subheadline}
+                            </span>
+                          </h2>
+                          <p className="text-[10px] text-stone-600 line-clamp-2">
+                            {theme.hero.description}
+                          </p>
+                          <div className="pt-1 flex gap-2">
+                            <span className="px-3 py-1 bg-[#a81c24] text-white text-[9px] font-bold rounded-xs">
+                              {theme.hero.primaryBtnText}
+                            </span>
+                            <span className="px-3 py-1 bg-stone-900 text-white text-[9px] font-bold rounded-xs">
+                              {theme.hero.secondaryBtnText}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Model thumbnail in preview */}
+                        <div className="absolute right-3 top-3 bottom-3 hidden sm:flex items-center gap-2">
+                          <div className="relative w-16 h-24 rounded-md overflow-hidden shadow-sm border border-white">
+                            <Image
+                              src={theme.hero.modelImage2 || "/products/product 1.png"}
+                              alt="model"
+                              fill
+                              className="object-cover"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Live Trust Strip */}
+                    <div className="bg-stone-50 border-b border-stone-200 py-2.5 px-3">
+                      <div className="grid grid-cols-2 gap-2 text-center text-[9px] font-bold text-stone-700">
+                        <div>🚚 {theme.trustStrip.item1}</div>
+                        <div>🛡️ {theme.trustStrip.item2}</div>
+                        <div>✂️ {theme.trustStrip.item3}</div>
+                        <div>🔄 {theme.trustStrip.item4}</div>
+                      </div>
+                    </div>
+
+                    {/* Live Section Headers */}
+                    <div className="p-4 text-center space-y-1">
+                      <p className="text-[9px] font-semibold tracking-widest uppercase text-stone-400">
+                        {theme.sections.section1Tag}
+                      </p>
+                      <h3 className="text-xs font-black uppercase text-stone-900">
+                        {theme.sections.section1Title}
+                      </h3>
+                      <div className="grid grid-cols-2 gap-2 pt-3">
+                        {products.slice(0, 2).map((p) => (
+                          <div key={p.id} className="p-2 border border-stone-200 rounded-lg text-left">
+                            <div className="relative h-28 bg-stone-100 rounded-md overflow-hidden mb-1">
+                              <Image src={p.imageUrl || "/products/product 1.png"} alt={p.name} fill className="object-cover" />
+                            </div>
+                            <span className="text-[10px] font-bold text-stone-900 block truncate">{p.name}</span>
+                            <span className="text-[10px] font-black text-[#a81c24]">₹{p.price}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </main>
+        )}
+
         {/* TAB 4: AEO, GEO & SEO STUDIO */}
         {/* --------------------------------------------------------- */}
         {activeTab === "seo" && (

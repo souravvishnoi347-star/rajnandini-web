@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Search, ShoppingBag, Menu, X, User } from "lucide-react";
 import { useCart } from "@/context/CartContext";
+import { ThemeService, DEFAULT_THEME_CONFIG } from "@/lib/themeConfig";
 
 const NAV_ROW_1 = [
   { name: "KURTIS", href: "/collections/kurtis" },
@@ -31,6 +32,14 @@ export default function Navbar() {
   const { totalItems, setIsCartOpen } = useCart();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [theme, setTheme] = useState(DEFAULT_THEME_CONFIG);
+
+  useEffect(() => {
+    setTheme(ThemeService.getTheme());
+    const handleUpdate = () => setTheme(ThemeService.getTheme());
+    window.addEventListener("rajnandini_theme_updated", handleUpdate);
+    return () => window.removeEventListener("rajnandini_theme_updated", handleUpdate);
+  }, []);
 
   if (pathname?.startsWith("/admin")) return null;
 
@@ -43,16 +52,18 @@ export default function Navbar() {
 
   return (
     <header className="sticky top-0 z-40 w-full bg-white border-b border-stone-200 shadow-xs">
-      {/* 1. TOP MAROON/RED TICKER ANNOUNCEMENT BAR */}
-      <div className="bg-[#a81c24] text-white text-[11px] font-semibold py-1.5 px-4 overflow-hidden relative">
-        <div className="flex items-center justify-center space-x-6 whitespace-nowrap text-center animate-pulse">
-          <span>🔥 LIMITED TIME OFFER!</span>
-          <span>🛍️ BUY 2 GET 5% OFF — CODE: RAJ5</span>
-          <span>✨ BUY 3 GET 10% OFF — CODE: RAJ10</span>
-          <span>💳 EXTRA 5% OFF ON PREPAID (UPI)</span>
-          <span>🚚 FREE SHIPPING ACROSS INDIA</span>
+      {/* 1. TOP TICKER ANNOUNCEMENT BAR */}
+      {theme.announcement.enabled && (
+        <div
+          style={{ backgroundColor: theme.announcement.bgColor || "#a81c24" }}
+          className="text-white text-[11px] font-semibold py-1.5 px-4 overflow-hidden relative transition-colors duration-300"
+        >
+          <div className="flex items-center justify-center space-x-6 whitespace-nowrap text-center animate-pulse">
+            <span>{theme.announcement.text}</span>
+            <span>{theme.announcement.secondaryText}</span>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* 2. MAIN HEADER (SEARCH | LOGO | ACTIONS) */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 sm:py-4">
