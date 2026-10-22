@@ -28,21 +28,41 @@ export const CATEGORIES_LIST = [
 ];
 
 /**
- * Returns complete product list merged between Cloud Supabase & Local Cache
+ * Returns complete product list merged between Cloud Supabase, Local Admin Cache & Initial Fallback
  */
 export async function getAllProducts(): Promise<ProductItem[]> {
+  // If in client browser, check if Admin has created or modified products locally
+  let clientOverride: ProductItem[] | null = null;
+  if (typeof window !== "undefined") {
+    try {
+      const stored = localStorage.getItem("rajnandini_admin_products");
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          clientOverride = parsed;
+        }
+      }
+    } catch {
+      // fallback
+    }
+  }
+
   try {
     const remote = await SupabaseService.fetchLiveProducts();
     if (remote && remote.length > 0) {
       const remoteSkus = new Set(remote.map((p) => p.sku));
-      const fallbacks = (INITIAL_PRODUCTS as ProductItem[]).filter(
-        (p) => !remoteSkus.has(p.sku)
-      );
+      const pool = clientOverride || (INITIAL_PRODUCTS as ProductItem[]);
+      const fallbacks = pool.filter((p) => !remoteSkus.has(p.sku));
       return [...remote, ...fallbacks].filter((p) => !p.isService);
     }
   } catch (err) {
     console.warn("Using fallback inventory:", err);
   }
+
+  if (clientOverride && clientOverride.length > 0) {
+    return clientOverride.filter((p) => !p.isService);
+  }
+
   return (INITIAL_PRODUCTS as ProductItem[]).filter((p) => !p.isService);
 }
 

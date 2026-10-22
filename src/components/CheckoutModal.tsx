@@ -72,6 +72,42 @@ export default function CheckoutModal({ onClose }: CheckoutModalProps) {
 
       await SupabaseService.recordOnlineOrder(orderData);
 
+      // Record in local admin order store for instant admin visibility
+      if (typeof window !== "undefined") {
+        try {
+          const stored = localStorage.getItem("rajnandini_admin_orders");
+          const existingOrders = stored ? JSON.parse(stored) : [];
+          existingOrders.unshift({
+            id: orderNumber,
+            orderNumber,
+            customerName: formData.name.trim(),
+            customerPhone: formData.phone.trim(),
+            shippingAddress: formData.address.trim(),
+            city: formData.city.trim(),
+            state: formData.state.trim(),
+            pincode: formData.pincode.trim(),
+            items: cart.map((c) => ({
+              sku: c.product.sku,
+              name: c.product.name,
+              price: c.product.price,
+              quantity: c.quantity,
+              selectedSize: c.selectedSize || "Standard",
+              imageUrl: c.product.imageUrl || (c.product.images && c.product.images[0]) || "",
+            })),
+            subtotal,
+            shippingFee: 0,
+            totalAmount: subtotal,
+            paymentMethod: formData.paymentMethod.toLowerCase(),
+            status: "placed",
+            createdAt: new Date().toISOString(),
+          });
+          localStorage.setItem("rajnandini_admin_orders", JSON.stringify(existingOrders));
+          window.dispatchEvent(new Event("rajnandini_orders_updated"));
+        } catch (e) {
+          console.warn("Could not cache order locally:", e);
+        }
+      }
+
       setOrderSuccess({
         orderId: orderNumber,
         total: subtotal,

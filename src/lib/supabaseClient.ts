@@ -65,11 +65,67 @@ export const SupabaseService = {
         final_total: order.totalAmount,
         payment_method: order.paymentMethod,
         discount_amount: 0,
-        notes: `Online Web Order | Address: ${order.shippingAddress}, ${order.city}, ${order.state} - ${order.pincode}`,
+        notes: `Online Web Order | Status: ${order.status || "placed"} | Address: ${order.shippingAddress}, ${order.city}, ${order.state} - ${order.pincode}`,
       });
       return !error;
     } catch {
       return false;
+    }
+  },
+
+  async upsertProduct(product: Partial<ProductItem>): Promise<boolean> {
+    try {
+      const payload: any = {
+        sku: product.sku,
+        barcode: product.barcode || `89${Date.now().toString().slice(-6)}`,
+        name: product.name,
+        category: product.category,
+        price: product.price,
+        mrp: product.mrp,
+        purchase_cost: product.purchaseCost || 0,
+        stock: product.stock || 0,
+        sizes: product.sizes || [],
+        colors: product.colors || [],
+        badge: product.badge || null,
+        image_url: product.imageUrl || (product.images && product.images[0]) || "",
+        description: product.description || "",
+        fabric: product.fabric || "",
+        occasion: product.occasion || "",
+        wash_care: product.washCare || "",
+      };
+
+      if (product.id) {
+        payload.id = product.id;
+      }
+
+      const { error } = await supabase.from("products").upsert(payload, { onConflict: "sku" });
+      return !error;
+    } catch (err) {
+      console.warn("Failed to upsert product in Supabase:", err);
+      return false;
+    }
+  },
+
+  async deleteProduct(id: string): Promise<boolean> {
+    try {
+      const { error } = await supabase.from("products").delete().eq("id", id);
+      return !error;
+    } catch {
+      return false;
+    }
+  },
+
+  async fetchOrders(): Promise<any[] | null> {
+    try {
+      const { data, error } = await supabase
+        .from("bills")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) return null;
+      return data;
+    } catch {
+      return null;
     }
   },
 };

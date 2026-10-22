@@ -17,6 +17,16 @@ export type ProductCategory =
   | "undergarments"
   | (string & {});
 
+export interface ProductSeoData {
+  metaTitle?: string;
+  metaDescription?: string;
+  focusKeyword?: string;
+  canonicalUrl?: string;
+  targetCities?: string[];
+  aeoFaqs?: { question: string; answer: string }[];
+  localDeliveryAvailable?: boolean;
+}
+
 export interface ProductItem {
   id: string;
   sku: string;
@@ -38,6 +48,7 @@ export interface ProductItem {
   fabric?: string;
   occasion?: string;
   washCare?: string;
+  seo?: ProductSeoData;
 }
 
 export interface CartItem {

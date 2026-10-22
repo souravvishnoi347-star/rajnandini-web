@@ -3,16 +3,18 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { X, ShoppingBag, Plus, Minus, Trash2, ArrowRight, MessageSquare, ShieldCheck } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { SITE_CONFIG, getProductSlug } from "@/lib/seoEngine";
 import CheckoutModal from "./CheckoutModal";
 
 export default function CartDrawer() {
+  const pathname = usePathname();
   const { cart, removeFromCart, updateQuantity, subtotal, totalItems, isCartOpen, setIsCartOpen } = useCart();
   const [showCheckout, setShowCheckout] = useState(false);
 
-  if (!isCartOpen) return null;
+  if (!isCartOpen || pathname?.startsWith("/admin")) return null;
 
   const handleWhatsAppCheckout = () => {
     if (cart.length === 0) return;
