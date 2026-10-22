@@ -94,26 +94,15 @@ export default function Navbar() {
             </Link>
           </div>
 
-          {/* Right: Actions (Account, WhatsApp, Cart) */}
-          <div className="flex items-center space-x-5 text-xs font-semibold text-stone-700">
-            {/* Account / WhatsApp Consultation */}
-            <a
-              href={`https://api.whatsapp.com/send?phone=${SITE_CONFIG.whatsappNumber}&text=Namaste%20Rajnandini%20Boutique`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hidden sm:flex items-center gap-1 hover:text-[#a81c24] transition uppercase tracking-wider text-[11px]"
-            >
-              <MessageSquare className="w-3.5 h-3.5 text-emerald-600" />
-              <span>WHATSAPP</span>
-            </a>
-
-            {/* Haridwar Showroom */}
+          {/* Right: Actions (Account, Showroom, Cart - Subhvastra Style) */}
+          <div className="flex items-center space-x-6 text-xs font-semibold text-stone-700">
+            {/* Account / Support */}
             <Link
               href="/about"
-              className="hidden md:flex items-center gap-1 hover:text-[#a81c24] transition uppercase tracking-wider text-[11px]"
+              className="hidden sm:flex items-center gap-1.5 hover:text-[#a81c24] transition uppercase tracking-wider text-[11px]"
             >
               <User className="w-3.5 h-3.5" />
-              <span>ABOUT SHOWROOM</span>
+              <span>ACCOUNT</span>
             </Link>
 
             {/* Cart Trigger (Subhvastra Style) */}

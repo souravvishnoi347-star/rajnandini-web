@@ -52,18 +52,15 @@ export default async function HomePage() {
                   href="/products/rani-pink-embroidered-flared-anarkali-suit-set-with-dupatta-rj-suit-001"
                   className="px-6 py-2.5 bg-[#a81c24] hover:bg-[#8e171e] text-white text-xs font-bold uppercase tracking-wider rounded-sm transition shadow-sm"
                 >
-                  VIEW FIRST ARRIVAL
+                  SHOP FIRST ARRIVAL
                 </Link>
 
-                <a
-                  href={`https://api.whatsapp.com/send?phone=${SITE_CONFIG.whatsappNumber}&text=Namaste%20Indu%20Ji!%20I%20am%20interested%20in%20Rani%20Pink%20Anarkali%20Suit.`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-5 py-2.5 bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-bold uppercase tracking-wider rounded-sm transition shadow-sm flex items-center gap-1.5"
+                <Link
+                  href="/collections/Suit%20Set"
+                  className="px-6 py-2.5 bg-stone-900 hover:bg-stone-800 text-white text-xs font-bold uppercase tracking-wider rounded-sm transition shadow-sm"
                 >
-                  <MessageSquare className="w-3.5 h-3.5" />
-                  <span>WHATSAPP ORDER</span>
-                </a>
+                  EXPLORE SUITS & GOWNS
+                </Link>
               </div>
             </div>
 

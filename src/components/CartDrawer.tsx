@@ -171,20 +171,12 @@ Please confirm availability and share payment details (UPI/QR or COD). Thank you
                   </div>
                 </div>
 
-                <div className="space-y-2 pt-1">
-                  <button
-                    onClick={handleWhatsAppCheckout}
-                    className="w-full py-3 bg-emerald-700 hover:bg-emerald-600 text-white font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-sm cursor-pointer"
-                  >
-                    <MessageSquare className="w-4 h-4" />
-                    <span>Order via WhatsApp (Instant)</span>
-                  </button>
-
+                <div className="pt-2">
                   <button
                     onClick={() => setShowCheckout(true)}
-                    className="w-full py-3 bg-[#a81c24] hover:bg-[#8e171e] text-white font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-sm cursor-pointer"
+                    className="w-full py-3.5 bg-[#a81c24] hover:bg-[#8e171e] text-white font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-sm cursor-pointer"
                   >
-                    <span>Proceed to Checkout</span>
+                    <span>PROCEED TO CHECKOUT</span>
                     <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>

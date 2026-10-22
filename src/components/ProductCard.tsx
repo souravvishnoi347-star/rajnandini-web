@@ -3,9 +3,9 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Star, MessageSquare, ShoppingBag, Check } from "lucide-react";
+import { Star, ShoppingBag, Check } from "lucide-react";
 import { ProductItem } from "@/types/store";
-import { getProductSlug, getWhatsAppOrderUrl } from "@/lib/seoEngine";
+import { getProductSlug } from "@/lib/seoEngine";
 import { useCart } from "@/context/CartContext";
 
 interface ProductCardProps {
@@ -38,12 +38,6 @@ export default function ProductCard({
     addToCart(product, 1);
     setAdded(true);
     setTimeout(() => setAdded(false), 1800);
-  };
-
-  const handleWhatsApp = (e: React.MouseEvent) => {
-    e.preventDefault();
-    const url = getWhatsAppOrderUrl(product);
-    window.open(url, "_blank");
   };
 
   return (
@@ -120,35 +114,25 @@ export default function ProductCard({
           </span>
         </div>
 
-        {/* Dual Actions: WhatsApp Buy & Add to Cart */}
-        <div className="grid grid-cols-2 gap-1.5 pt-2">
-          <button
-            onClick={handleWhatsApp}
-            type="button"
-            className="py-1.5 px-2 bg-emerald-700 hover:bg-emerald-600 text-white text-[11px] font-bold rounded-sm flex items-center justify-center gap-1 cursor-pointer transition"
-            title="Order directly on WhatsApp"
-          >
-            <MessageSquare className="w-3 h-3" />
-            <span>WhatsApp</span>
-          </button>
-
+        {/* Clean E-Commerce Add To Bag Action */}
+        <div className="pt-2">
           <button
             onClick={handleAdd}
             type="button"
-            className={`py-1.5 px-2 text-[11px] font-bold rounded-sm flex items-center justify-center gap-1 cursor-pointer transition border ${
+            className={`w-full py-2 px-3 text-xs font-bold uppercase tracking-wider rounded-xs flex items-center justify-center gap-1.5 cursor-pointer transition border ${
               added
                 ? "bg-[#a81c24] text-white border-[#a81c24]"
-                : "bg-stone-50 hover:bg-stone-100 text-stone-800 border-stone-300"
+                : "bg-white hover:bg-stone-900 text-stone-900 hover:text-white border-stone-800"
             }`}
           >
             {added ? (
               <>
-                <Check className="w-3 h-3 text-white" />
-                <span>Added!</span>
+                <Check className="w-3.5 h-3.5 text-white" />
+                <span>Added To Cart!</span>
               </>
             ) : (
               <>
-                <ShoppingBag className="w-3 h-3" />
+                <ShoppingBag className="w-3.5 h-3.5" />
                 <span>Add To Cart</span>
               </>
             )}
