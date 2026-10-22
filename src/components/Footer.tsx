@@ -1,5 +1,6 @@
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { MapPin, Phone, Mail, Clock, ShieldCheck, Sparkles, Heart } from "lucide-react";
 import { SITE_CONFIG } from "@/lib/seoEngine";
 
@@ -10,15 +11,16 @@ export default function Footer() {
         {/* Main Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
           {/* Col 1: Brand & Heritage */}
-          <div className="space-y-3">
-            <div>
-              <span className="font-serif text-3xl font-extrabold text-[#e02b37] tracking-tight block">
-                Rajnandini
-              </span>
-              <p className="text-[10px] tracking-[0.3em] text-stone-400 font-sans uppercase font-bold">
-                BOUTIQUE • HARIDWAR
-              </p>
-            </div>
+          <div className="space-y-4">
+            <Link href="/" className="inline-block bg-white rounded-lg px-3 py-2 shadow-sm border border-stone-800">
+              <Image
+                src="/logo.png"
+                alt="Rajnandini Boutique Haridwar"
+                width={190}
+                height={84}
+                className="h-12 w-auto object-contain"
+              />
+            </Link>
             <p className="text-xs text-stone-400 leading-relaxed">
               Uttarakhand&apos;s celebrated boutique for pre-draped sarees, royal bridal lehengas, pure Banarasi silk, and custom tailored anarkalis. Managed by Indu Sharma.
             </p>

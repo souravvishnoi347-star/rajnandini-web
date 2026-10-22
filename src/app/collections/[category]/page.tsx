@@ -46,13 +46,34 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
   const decodedCategory = decodeURIComponent(category);
 
   const allProducts = await getAllProducts();
-  const categoryProducts = allProducts.filter(
-    (p) =>
-      p.category.toLowerCase() === decodedCategory.toLowerCase() ||
-      (decodedCategory.toLowerCase().includes("saree") && p.category.toLowerCase().includes("saree")) ||
-      (decodedCategory.toLowerCase().includes("bridal") && (p.category.toLowerCase().includes("bridal") || p.category.toLowerCase().includes("lehenga"))) ||
-      (decodedCategory.toLowerCase().includes("gown") && (p.category.toLowerCase().includes("gown") || p.category.toLowerCase().includes("suit")))
-  );
+  const lowerCat = decodedCategory.toLowerCase();
+
+  const categoryProducts = allProducts.filter((p) => {
+    const pCat = (p.category || "").toLowerCase();
+    if (lowerCat === "all") return true;
+    if (lowerCat === "kurtis" || lowerCat === "kurti") {
+      return pCat.includes("kurti") || pCat.includes("suit");
+    }
+    if (lowerCat === "kurti-sets") {
+      return pCat.includes("suit") || pCat.includes("kurti") || pCat.includes("sharara");
+    }
+    if (lowerCat.includes("saree")) {
+      return pCat.includes("saree") || pCat.includes("silk");
+    }
+    if (lowerCat === "bridal-lehenga") {
+      return pCat.includes("bridal") || (pCat.includes("lehenga") && (p.name.toLowerCase().includes("bridal") || p.price > 3000));
+    }
+    if (lowerCat.includes("lehenga") || lowerCat.includes("lancha")) {
+      return pCat.includes("lehenga") || pCat.includes("bridal") || p.name.toLowerCase().includes("lancha");
+    }
+    if (lowerCat.includes("purse") || lowerCat.includes("bag")) {
+      return pCat.includes("bag") || pCat.includes("purse") || pCat.includes("handbag");
+    }
+    if (lowerCat.includes("juti") || lowerCat.includes("shoe") || lowerCat.includes("footwear")) {
+      return pCat.includes("footwear") || pCat.includes("juti") || pCat.includes("mojri");
+    }
+    return pCat === lowerCat;
+  });
 
   return (
     <div className="bg-white max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 space-y-8">

@@ -4,19 +4,18 @@ import Image from "next/image";
 import { getAllProducts } from "@/lib/catalogService";
 import ProductCard from "@/components/ProductCard";
 import AeoFaqSection from "@/components/AeoFaqSection";
-import { SITE_CONFIG } from "@/lib/seoEngine";
-import { Truck, ShieldCheck, Scissors, RefreshCw, MessageSquare } from "lucide-react";
+import { Truck, ShieldCheck, Scissors, RefreshCw } from "lucide-react";
 
 export default async function HomePage() {
   const allProducts = await getAllProducts();
 
   // Categorized product groups
-  const anarkalisAndGowns = allProducts.filter(
-    (p) => p.category === "Gown" || p.category === "Suit Set"
+  const kurtiSets = allProducts.filter(
+    (p) => p.category === "Suit Set" || p.category === "kurtis" || p.category === "kurti-sets"
   );
 
   const bridalAndSarees = allProducts.filter(
-    (p) => p.category === "Bridal Wear" || p.category === "Saree"
+    (p) => p.category === "Bridal Wear" || p.category === "Saree" || p.category === "sarees" || p.category === "lehengas"
   );
 
   const featuredBestsellers = allProducts.slice(0, 8);
@@ -33,18 +32,18 @@ export default async function HomePage() {
             {/* Left Content / Banner Title */}
             <div className="relative z-10 max-w-lg space-y-3 sm:space-y-4">
               <span className="inline-block bg-[#a81c24] text-white text-[10px] sm:text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full shadow-sm">
-                Pre Draped Sarees & Bridal &apos;26
+                Festive & Bridal &apos;26 Collection
               </span>
 
               <h1 className="font-serif text-3xl sm:text-5xl lg:text-6xl font-black text-stone-900 tracking-tight leading-[1.1]">
-                Festive Glamour <br />
+                Royal Ethnic Wear <br />
                 <span className="text-[#a81c24] italic font-serif font-normal">
                   Rajnandini Haridwar
                 </span>
               </h1>
 
               <p className="text-xs sm:text-sm text-stone-700 font-medium">
-                Flat 10% Off on Orders Above ₹2,999 • Free Pan-India Delivery
+                Kurtis, Kurti Sets, Pure Sarees, Regal Lehengas, Purses & Handcrafted Jutis.
               </p>
 
               <div className="pt-2 flex items-center gap-3">
@@ -56,10 +55,10 @@ export default async function HomePage() {
                 </Link>
 
                 <Link
-                  href="/collections/Suit%20Set"
+                  href="/collections/kurti-sets"
                   className="px-6 py-2.5 bg-stone-900 hover:bg-stone-800 text-white text-xs font-bold uppercase tracking-wider rounded-sm transition shadow-sm"
                 >
-                  EXPLORE SUITS & GOWNS
+                  EXPLORE KURTI SETS
                 </Link>
               </div>
             </div>
@@ -107,7 +106,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* 2. SUBHVASTRA PERKS / TRUST STRIP */}
+      {/* 2. TRUST STRIP */}
       <section className="border-y border-stone-200 bg-stone-50 py-4">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
@@ -131,38 +130,37 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* 3. SECTION ONE: ANARKALI SUITS, ANARKALI DRESSES AND INDIAN GOWN (SUBHVASTRA EXACT HEADING) */}
+      {/* 3. SECTION ONE: KURTIS & KURTI SETS */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center space-y-1 mb-8">
           <p className="text-[11px] font-semibold tracking-widest uppercase text-stone-500">
-            AND INDIAN GOWN
+            FESTIVE & EVERYDAY WEAR
           </p>
           <h2 className="text-xl sm:text-2xl lg:text-3xl font-extrabold uppercase tracking-wide text-stone-900 font-sans">
-            ANARKALI SUITS, ANARKALI DRESSES AND INDIAN GOWN
+            KURTIS, ANARKALI SUIT SETS & SHARARAS
           </h2>
         </div>
 
         {/* 4 Columns Product Grid */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-          {(anarkalisAndGowns.length > 0 ? anarkalisAndGowns.slice(0, 8) : featuredBestsellers.slice(0, 4)).map(
+          {(kurtiSets.length > 0 ? kurtiSets.slice(0, 8) : featuredBestsellers.slice(0, 4)).map(
             (product) => (
               <ProductCard key={product.id || product.sku} product={product} />
             )
           )}
         </div>
 
-        {/* Subhvastra Solid Red View All Button */}
         <div className="text-center pt-8">
           <Link
-            href="/collections/Gown"
+            href="/collections/kurti-sets"
             className="inline-block px-10 py-3 bg-[#a81c24] hover:bg-[#8e171e] text-white text-xs font-bold uppercase tracking-wider rounded-sm transition shadow-sm"
           >
-            VIEW ALL PRODUCTS
+            VIEW ALL KURTIS & SUITS
           </Link>
         </div>
       </section>
 
-      {/* 4. SECTION TWO: ROYAL BRIDAL LEHENGAS & BANARASI SAREES */}
+      {/* 4. SECTION TWO: ROYAL BRIDAL LEHENGAS & PURE SILK SAREES */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
         <div className="text-center space-y-1 mb-8">
           <p className="text-[11px] font-semibold tracking-widest uppercase text-stone-500">
@@ -182,10 +180,9 @@ export default async function HomePage() {
           )}
         </div>
 
-        {/* Subhvastra Solid Red View All Button */}
         <div className="text-center pt-8">
           <Link
-            href="/collections/Saree"
+            href="/collections/sarees"
             className="inline-block px-10 py-3 bg-[#a81c24] hover:bg-[#8e171e] text-white text-xs font-bold uppercase tracking-wider rounded-sm transition shadow-sm"
           >
             VIEW ALL SAREES & LEHENGAS
@@ -193,7 +190,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* 5. AEO FAQ ACCORDION & HARIDWAR SHOWROOM CITATION */}
+      {/* 5. AEO FAQ ACCORDION */}
       <div className="bg-stone-50 border-t border-stone-200">
         <AeoFaqSection />
       </div>

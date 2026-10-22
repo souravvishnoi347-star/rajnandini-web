@@ -6,23 +6,25 @@ import { getProductSlug, getSkuFromSlug } from "./seoEngine";
 // High quality curated stock photos for ethnic categories to ensure luxury visual presentation
 export const CATEGORY_HERO_IMAGES: Record<string, string> = {
   sarees: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1200&q=80",
-  lehengas: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=1200&q=80",
-  kurtis: "https://images.unsplash.com/photo-1596783049964-b816223298a0?auto=format&fit=crop&w=1200&q=80",
-  handbags: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=1200&q=80",
-  jewellery: "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&w=1200&q=80",
-  kidswear: "https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?auto=format&fit=crop&w=1200&q=80",
-  all: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1400&q=80",
+  lehengas: "/products/lancha.png",
+  "bridal-lehenga": "/products/lancha.png",
+  kurtis: "/products/product 1.png",
+  "kurti-sets": "/products/suit full.png",
+  purses: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=1200&q=80",
+  juti: "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?auto=format&fit=crop&w=1200&q=80",
+  all: "/products/product 1.png",
 };
 
+// Exactly what Rajnandini Boutique sells:
 export const CATEGORIES_LIST = [
-  { id: "all", name: "All Collection", tag: "Complete Boutique" },
-  { id: "sarees", name: "Designer Sarees", tag: "Dola Silk & Banarasi" },
-  { id: "lehengas", name: "Bridal Lehengas", tag: "Wedding & Festive" },
-  { id: "kurtis", name: "Suits & Kurtis", tag: "Pure Chanderi & Cotton" },
-  { id: "handbags", name: "Luxury Handbags", tag: "Bridal Clutches & Slings" },
-  { id: "jewellery", name: "Boutique Jewellery", tag: "Kundan & Temple" },
-  { id: "kidswear", name: "Kids Ethnic", tag: "Festive Kids Wear" },
-  { id: "undergarments", name: "Undergarments & Lingerie", tag: "Everyday & Bridal Comfort" },
+  { id: "all", name: "All Products", tag: "Complete Boutique" },
+  { id: "kurtis", name: "Kurtis", tag: "Daily & Office Wear" },
+  { id: "kurti-sets", name: "Kurti Sets", tag: "Anarkali, Sharara & Pant Sets" },
+  { id: "sarees", name: "Sarees", tag: "Banarasi, Dola Silk & Organza" },
+  { id: "lehengas", name: "Lehengas", tag: "Festive & Party Wear" },
+  { id: "bridal-lehenga", name: "Bridal Lehengas", tag: "Royal Wedding Collection" },
+  { id: "purses", name: "Purses & Clutches", tag: "Bridal Potlis & Handbags" },
+  { id: "juti", name: "Juti & Footwear", tag: "Handcrafted Mojris & Heels" },
 ];
 
 /**
@@ -32,7 +34,6 @@ export async function getAllProducts(): Promise<ProductItem[]> {
   try {
     const remote = await SupabaseService.fetchLiveProducts();
     if (remote && remote.length > 0) {
-      // Merge initial catalog with remote to ensure comprehensive items
       const remoteSkus = new Set(remote.map((p) => p.sku));
       const fallbacks = (INITIAL_PRODUCTS as ProductItem[]).filter(
         (p) => !remoteSkus.has(p.sku)
@@ -59,17 +60,9 @@ export async function getProductBySlug(slug: string): Promise<ProductItem | null
     if (found) return found;
   }
 
-  // Exact slug match fallback
+  // Fallback match on slug name
   return (
-    products.find((p) => getProductSlug(p) === slug.toLowerCase()) || null
+    products.find((p) => getProductSlug(p).toLowerCase() === slug.toLowerCase()) ||
+    null
   );
-}
-
-/**
- * Get products filtered by category
- */
-export async function getProductsByCategory(category: string): Promise<ProductItem[]> {
-  const products = await getAllProducts();
-  if (category === "all") return products;
-  return products.filter((p) => p.category.toLowerCase() === category.toLowerCase());
 }
