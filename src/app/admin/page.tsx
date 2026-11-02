@@ -172,22 +172,86 @@ export default function AdminPage() {
     setPinInput("");
   };
 
-  // Metrics
+  // Metrics (100% Dynamic from store products and orders)
   const stats = useMemo(() => {
     const totalSales = orders.reduce((sum, ord) => sum + ord.totalAmount, 0);
     const totalOrders = orders.length;
     const avgOrderValue = totalOrders > 0 ? Math.round(totalSales / totalOrders) : 0;
     const lowStockCount = products.filter((p) => p.stock <= 5).length;
+    const criticalStockCount = products.filter((p) => p.stock <= 2).length;
     const totalProducts = products.length;
+    const catalogStockUnits = products.reduce((sum, p) => sum + (p.stock || 0), 0);
+    const catalogValue = products.reduce((sum, p) => sum + (p.price * (p.stock || 0)), 0);
     const pendingOrders = orders.filter((o) => o.status === "placed" || o.status === "confirmed").length;
+    const deliveredOrders = orders.filter((o) => o.status === "delivered").length;
+    const shippedOrders = orders.filter((o) => o.status === "shipped").length;
+    const cancelledOrders = orders.filter((o) => o.status === "cancelled").length;
+
+    // Unique Customers by phone
+    const customerPhones = orders.map((o) => o.customerPhone.replace(/[\s\-\+]/g, "").slice(-10));
+    const uniquePhones = new Set(customerPhones.filter(Boolean));
+    const totalCustomers = uniquePhones.size;
+    const phoneCounts: Record<string, number> = {};
+    customerPhones.forEach((p) => {
+      if (p) phoneCounts[p] = (phoneCounts[p] || 0) + 1;
+    });
+    const repeatCustomersCount = Object.values(phoneCounts).filter((c) => c > 1).length;
+    const repeatRate = totalCustomers > 0 ? Math.round((repeatCustomersCount / totalCustomers) * 100) : 0;
+
+    const totalItemsSold = orders.reduce(
+      (sum, ord) => sum + ord.items.reduce((iSum, i) => iSum + i.quantity, 0),
+      0
+    );
+    const estProfit = Math.round(totalSales * 0.45);
+
+    // Dynamic Category Distribution from products catalog
+    const catMap: Record<string, { count: number; value: number }> = {};
+    products.forEach((p) => {
+      const cat = p.category || "Ethnic Wear";
+      if (!catMap[cat]) catMap[cat] = { count: 0, value: 0 };
+      catMap[cat].count += 1;
+      catMap[cat].value += p.price * (p.stock || 1);
+    });
+
+    const palette = ["#4f46e5", "#10b981", "#14b8a6", "#818cf8", "#f59e0b", "#ec4899", "#6366f1"];
+    const totalProdCount = products.length || 1;
+    const categoryBreakdown = Object.entries(catMap)
+      .map(([name, data], idx) => ({
+        name,
+        count: data.count,
+        value: data.value,
+        percentage: Math.round((data.count / totalProdCount) * 100),
+        color: palette[idx % palette.length],
+      }))
+      .sort((a, b) => b.count - a.count);
+
+    // Dynamic Payment Distribution
+    const upiOrders = orders.filter((o) => o.paymentMethod === "upi").length;
+    const codOrders = orders.filter((o) => o.paymentMethod === "cod").length;
+    const upiPct = totalOrders > 0 ? Math.round((upiOrders / totalOrders) * 100) : 60;
+    const codPct = totalOrders > 0 ? 100 - upiPct : 40;
 
     return {
       totalSales,
       totalOrders,
       avgOrderValue,
       lowStockCount,
+      criticalStockCount,
       totalProducts,
+      catalogStockUnits,
+      catalogValue,
       pendingOrders,
+      deliveredOrders,
+      shippedOrders,
+      cancelledOrders,
+      totalCustomers,
+      repeatCustomersCount,
+      repeatRate,
+      totalItemsSold,
+      estProfit,
+      categoryBreakdown,
+      upiPct,
+      codPct,
     };
   }, [products, orders]);
 
@@ -634,19 +698,19 @@ For any tailoring or exchange questions, call us directly at ${settings.phone}.`
           </div>
         </div>
 
-        {/* Sidebar Footer with Cloud Storage Bar & Support */}
+        {/* Sidebar Footer with Live Store Catalog Status & Support */}
         <div className="p-4 space-y-3">
-          {/* Cloud Storage Widget */}
+          {/* Active Catalog Widget */}
           <div className="bg-slate-50 border border-slate-200/60 rounded-2xl p-3.5 space-y-2">
             <div className="flex items-center justify-between text-xs">
-              <span className="font-bold text-slate-700 text-[11px]">Cloud Storage</span>
-              <span className="font-extrabold text-[#4f46e5] text-[11px]">78%</span>
+              <span className="font-bold text-slate-700 text-[11px]">Showroom Catalog</span>
+              <span className="font-extrabold text-[#4f46e5] text-[11px]">{stats.totalProducts} Items</span>
             </div>
             <div className="h-1.5 w-full bg-slate-200/80 rounded-full overflow-hidden">
-              <div className="h-full bg-[#4f46e5] rounded-full w-[78%]" />
+              <div className="h-full bg-[#4f46e5] rounded-full w-full" />
             </div>
             <span className="text-[10px] text-slate-400 block font-medium">
-              15.8 MB of 20 MB used
+              {stats.catalogStockUnits} units in stock • {stats.totalOrders} order{stats.totalOrders === 1 ? "" : "s"}
             </span>
           </div>
 
@@ -812,7 +876,7 @@ For any tailoring or exchange questions, call us directly at ${settings.phone}.`
                     Dashboard Overview
                   </h2>
                   <span className="text-[11px] font-bold text-[#4f46e5] bg-indigo-50 border border-indigo-200/60 px-2.5 py-0.5 rounded-full">
-                    ● Live Q4 Engine
+                    ● Haridwar Showroom Live
                   </span>
                 </div>
               </div>
@@ -821,7 +885,7 @@ For any tailoring or exchange questions, call us directly at ${settings.phone}.`
               <div className="flex items-center gap-2.5 flex-wrap">
                 <button className="px-3.5 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-xl transition flex items-center gap-2 shadow-xs">
                   <Calendar className="w-3.5 h-3.5 text-slate-500" />
-                  <span>Last 30 Days</span>
+                  <span>Real-time Live</span>
                   <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
                 </button>
 
@@ -843,7 +907,7 @@ For any tailoring or exchange questions, call us directly at ${settings.phone}.`
               </div>
             </div>
 
-            {/* 4 Top Metric Cards (Image 1 Exact Layout) */}
+            {/* 4 Top Metric Cards (100% Dynamic from Store Products and Orders) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
               {/* 1. TOTAL REVENUE */}
               <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition space-y-3">
@@ -858,23 +922,23 @@ For any tailoring or exchange questions, call us directly at ${settings.phone}.`
 
                 <div>
                   <div className="text-2xl font-black text-slate-900 tracking-tight">
-                    ₹1,28,430.80
+                    ₹{stats.totalSales.toLocaleString("en-IN")}
                   </div>
                   <div className="mt-1 flex items-center gap-1.5">
                     <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
-                      ↑ +14.8%
+                      ● Live Sales
                     </span>
-                    <span className="text-[11px] text-slate-400 font-medium">vs last month</span>
+                    <span className="text-[11px] text-slate-400 font-medium">{stats.totalOrders} order{stats.totalOrders === 1 ? "" : "s"} placed</span>
                   </div>
                 </div>
 
                 <div className="pt-1 border-t border-slate-100">
                   <div className="flex items-center justify-between text-[11px] mb-1.5">
-                    <span className="text-slate-500 font-medium">Monthly Target</span>
-                    <span className="font-bold text-slate-900">₹1,40,000 (91.7%)</span>
+                    <span className="text-slate-500 font-medium">Catalog Retail Value</span>
+                    <span className="font-bold text-slate-900">₹{stats.catalogValue.toLocaleString("en-IN")}</span>
                   </div>
                   <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-[#4f46e5] rounded-full w-[91.7%]" />
+                    <div className="h-full bg-[#4f46e5] rounded-full w-full" />
                   </div>
                 </div>
               </div>
@@ -892,19 +956,19 @@ For any tailoring or exchange questions, call us directly at ${settings.phone}.`
 
                 <div>
                   <div className="text-2xl font-black text-slate-900 tracking-tight">
-                    3,842
+                    {stats.totalOrders}
                   </div>
                   <div className="mt-1 flex items-center gap-1.5">
                     <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
-                      ↑ +8.2%
+                      {stats.deliveredOrders} delivered
                     </span>
-                    <span className="text-[11px] text-slate-400 font-medium">vs last month</span>
+                    <span className="text-[11px] text-slate-400 font-medium">• {stats.pendingOrders} pending</span>
                   </div>
                 </div>
 
                 <div className="pt-1 border-t border-slate-100 flex items-center justify-between text-[11px]">
                   <span className="text-slate-500 font-medium">Avg. Order Value</span>
-                  <span className="font-bold text-slate-900">₹1,850.00</span>
+                  <span className="font-bold text-slate-900">₹{stats.avgOrderValue.toLocaleString("en-IN")}</span>
                 </div>
               </div>
 
@@ -921,19 +985,19 @@ For any tailoring or exchange questions, call us directly at ${settings.phone}.`
 
                 <div>
                   <div className="text-2xl font-black text-slate-900 tracking-tight">
-                    14,290
+                    {stats.totalCustomers}
                   </div>
                   <div className="mt-1 flex items-center gap-1.5">
-                    <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
-                      ↑ +21.4%
+                    <span className="text-[11px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
+                      Verified
                     </span>
-                    <span className="text-[11px] text-slate-400 font-medium">new signups</span>
+                    <span className="text-[11px] text-slate-400 font-medium">phone checkouts</span>
                   </div>
                 </div>
 
                 <div className="pt-1 border-t border-slate-100 flex items-center justify-between text-[11px]">
-                  <span className="text-slate-500 font-medium">Retention Rate</span>
-                  <span className="font-bold text-slate-900">92.4%</span>
+                  <span className="text-slate-500 font-medium">Repeat Shoppers</span>
+                  <span className="font-bold text-slate-900">{stats.repeatCustomersCount} ({stats.repeatRate}%)</span>
                 </div>
               </div>
 
@@ -943,20 +1007,31 @@ For any tailoring or exchange questions, call us directly at ${settings.phone}.`
                   <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
                     Low Stock Alerts
                   </span>
-                  <div className="w-8 h-8 rounded-xl bg-red-50 text-red-600 flex items-center justify-center">
+                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${stats.lowStockCount > 0 ? "bg-amber-50 text-amber-600" : "bg-emerald-50 text-emerald-600"}`}>
                     <AlertTriangle className="w-4 h-4" />
                   </div>
                 </div>
 
                 <div>
                   <div className="text-2xl font-black text-slate-900 tracking-tight">
-                    18 SKU
+                    {stats.lowStockCount} SKU
                   </div>
                   <div className="mt-1 flex items-center gap-1.5">
-                    <span className="text-[11px] font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
-                      ! Action Needed
-                    </span>
-                    <span className="text-[11px] text-slate-400 font-medium">in fulfillment</span>
+                    {stats.lowStockCount > 0 ? (
+                      <>
+                        <span className="text-[11px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
+                          ! Attention
+                        </span>
+                        <span className="text-[11px] text-slate-400 font-medium">≤ 5 units left</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
+                          ✓ Stock Healthy
+                        </span>
+                        <span className="text-[11px] text-slate-400 font-medium">all items in stock</span>
+                      </>
+                    )}
                   </div>
                 </div>
 
@@ -968,14 +1043,16 @@ For any tailoring or exchange questions, call us directly at ${settings.phone}.`
                     }}
                     className="font-bold text-[#4f46e5] hover:underline flex items-center gap-1"
                   >
-                    <span>Review inventory →</span>
+                    <span>Review catalog →</span>
                   </button>
-                  <span className="text-red-500 font-semibold">3 critical</span>
+                  <span className={stats.criticalStockCount > 0 ? "text-red-500 font-semibold" : "text-slate-400 font-semibold"}>
+                    {stats.criticalStockCount > 0 ? `${stats.criticalStockCount} critical (≤2 qty)` : `${stats.totalProducts} active designs`}
+                  </span>
                 </div>
               </div>
             </div>
 
-            {/* Middle Section: Sales Overview & Category Donut (Image 1 Exact Layout) */}
+            {/* Middle Section: Sales Overview & Category Donut */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Left / 2 Cols: Sales Overview Chart */}
               <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs space-y-6">
@@ -986,7 +1063,7 @@ For any tailoring or exchange questions, call us directly at ${settings.phone}.`
                         Sales Overview
                       </h3>
                       <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
-                        +12% vs LY
+                        ● Haridwar Showroom Live
                       </span>
                     </div>
                     <p className="text-xs text-slate-400 font-medium mt-0.5">
@@ -1023,32 +1100,32 @@ For any tailoring or exchange questions, call us directly at ${settings.phone}.`
                   </div>
                 </div>
 
-                {/* Sub-KPI Row */}
+                {/* Sub-KPI Row (100% Dynamic) */}
                 <div className="grid grid-cols-3 gap-4 p-4 bg-slate-50/70 border border-slate-100 rounded-xl">
                   <div>
-                    <span className="text-[11px] font-semibold text-slate-400 block">Gross Revenue</span>
-                    <span className="text-base font-extrabold text-slate-900">₹4,25,800.00</span>
+                    <span className="text-[11px] font-semibold text-slate-400 block">Total Revenue</span>
+                    <span className="text-base font-extrabold text-slate-900">₹{stats.totalSales.toLocaleString("en-IN")}</span>
                   </div>
                   <div>
-                    <span className="text-[11px] font-semibold text-slate-400 block">Est. Net Profit</span>
-                    <span className="text-base font-extrabold text-slate-900">₹2,98,100.40</span>
+                    <span className="text-[11px] font-semibold text-slate-400 block">Est. Gross Margin</span>
+                    <span className="text-base font-extrabold text-slate-900">₹{stats.estProfit.toLocaleString("en-IN")}</span>
                   </div>
                   <div>
-                    <span className="text-[11px] font-semibold text-slate-400 block">Refund Rate</span>
+                    <span className="text-[11px] font-semibold text-slate-400 block">Items Sold</span>
                     <div className="flex items-baseline gap-1">
-                      <span className="text-base font-extrabold text-slate-900">1.2%</span>
-                      <span className="text-[10px] text-emerald-600 font-bold">(-0.4%)</span>
+                      <span className="text-base font-extrabold text-slate-900">{stats.totalItemsSold} Pcs</span>
+                      <span className="text-[10px] text-emerald-600 font-bold">({stats.totalOrders} ord)</span>
                     </div>
                   </div>
                 </div>
 
-                {/* SVG Area Chart (Image 1 Curve + Peak Tooltip) */}
+                {/* SVG Area Chart */}
                 <div className="relative pt-4">
-                  {/* Floating Peak Tooltip (Oct 14 Peak: ₹14,230.00) */}
+                  {/* Floating Peak Tooltip */}
                   <div className="absolute top-4 left-[64%] -translate-x-1/2 z-10 bg-slate-900 text-white p-2.5 rounded-xl shadow-xl border border-slate-700 text-center pointer-events-none">
-                    <span className="text-[10px] font-semibold text-slate-400 block">Oct 14 Peak</span>
-                    <span className="text-xs font-extrabold block">₹14,230.00</span>
-                    <span className="text-[9px] text-emerald-400 font-bold block mt-0.5">184 orders placed</span>
+                    <span className="text-[10px] font-semibold text-slate-400 block">Haridwar Showroom</span>
+                    <span className="text-xs font-extrabold block">₹{stats.totalSales.toLocaleString("en-IN")}</span>
+                    <span className="text-[9px] text-emerald-400 font-bold block mt-0.5">{stats.totalOrders} orders recorded</span>
                   </div>
 
                   {/* SVG Chart Graphic */}
@@ -1136,145 +1213,118 @@ For any tailoring or exchange questions, call us directly at ${settings.phone}.`
                 </div>
               </div>
 
-              {/* Right / 1 Col: Sales by Category Donut Chart */}
+              {/* Right / 1 Col: Sales & Inventory by Category Donut Chart */}
               <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs space-y-6 flex flex-col justify-between">
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <h3 className="text-base font-extrabold text-slate-900 tracking-tight">
-                      Sales by Category
+                      Catalog by Category
                     </h3>
-                    <button className="text-slate-400 hover:text-slate-600 p-1 rounded">
-                      <MoreVertical className="w-4 h-4" />
+                    <button
+                      onClick={() => setActiveTab("products")}
+                      className="text-xs font-bold text-[#4f46e5] hover:underline"
+                    >
+                      View All →
                     </button>
                   </div>
                   <p className="text-xs text-slate-400 font-medium">
-                    Top performing inventory segments
+                    Live distribution of boutique collections & designs
                   </p>
 
-                  {/* Donut Chart */}
+                  {/* Dynamic Donut Chart */}
                   <div className="relative my-6 flex items-center justify-center">
                     <div className="w-44 h-44 relative flex items-center justify-center">
                       <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
-                        {/* 42% Indigo - Kurtis & Suits */}
-                        <circle
-                          cx="50"
-                          cy="50"
-                          r="38"
-                          fill="transparent"
-                          stroke="#4f46e5"
-                          strokeWidth="14"
-                          strokeDasharray="100 139"
-                          strokeDashoffset="0"
-                        />
-                        {/* 28% Emerald - Pure Banarasi Sarees */}
-                        <circle
-                          cx="50"
-                          cy="50"
-                          r="38"
-                          fill="transparent"
-                          stroke="#10b981"
-                          strokeWidth="14"
-                          strokeDasharray="67 172"
-                          strokeDashoffset="-100"
-                        />
-                        {/* 18% Teal - Lehengas */}
-                        <circle
-                          cx="50"
-                          cy="50"
-                          r="38"
-                          fill="transparent"
-                          stroke="#14b8a6"
-                          strokeWidth="14"
-                          strokeDasharray="43 196"
-                          strokeDashoffset="-167"
-                        />
-                        {/* 12% Lavender - Handbags & Accessories */}
-                        <circle
-                          cx="50"
-                          cy="50"
-                          r="38"
-                          fill="transparent"
-                          stroke="#818cf8"
-                          strokeWidth="14"
-                          strokeDasharray="29 210"
-                          strokeDashoffset="-210"
-                        />
+                        {stats.categoryBreakdown.length === 0 ? (
+                          <circle
+                            cx="50"
+                            cy="50"
+                            r="38"
+                            fill="transparent"
+                            stroke="#e2e8f0"
+                            strokeWidth="14"
+                          />
+                        ) : (
+                          (() => {
+                            const circumference = 2 * Math.PI * 38; // ~238.76
+                            let accumulatedOffset = 0;
+                            return stats.categoryBreakdown.slice(0, 5).map((cat) => {
+                              const dash = (cat.percentage / 100) * circumference;
+                              const offset = accumulatedOffset;
+                              accumulatedOffset += dash;
+                              return (
+                                <circle
+                                  key={cat.name}
+                                  cx="50"
+                                  cy="50"
+                                  r="38"
+                                  fill="transparent"
+                                  stroke={cat.color}
+                                  strokeWidth="14"
+                                  strokeDasharray={`${dash} ${circumference - dash}`}
+                                  strokeDashoffset={-offset}
+                                />
+                              );
+                            });
+                          })()
+                        )}
                       </svg>
 
                       {/* Center label inside Donut */}
                       <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                         <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400">
-                          Total Sales
+                          Total Catalog
                         </span>
                         <span className="text-xl font-black text-slate-900">
-                          ₹12.8L
+                          {stats.totalProducts} Items
+                        </span>
+                        <span className="text-[10px] text-slate-400 font-medium">
+                          ₹{(stats.catalogValue / 100000).toFixed(1)}L Value
                         </span>
                       </div>
                     </div>
                   </div>
 
-                  {/* Category Breakdown List */}
+                  {/* Dynamic Category Breakdown List */}
                   <div className="space-y-2.5 text-xs">
-                    <div className="flex items-center justify-between font-semibold">
-                      <div className="flex items-center gap-2 text-slate-700">
-                        <span className="w-2.5 h-2.5 rounded-full bg-[#4f46e5] shrink-0" />
-                        <span>Kurtis & Suit Sets</span>
+                    {stats.categoryBreakdown.slice(0, 4).map((cat) => (
+                      <div key={cat.name} className="flex items-center justify-between font-semibold">
+                        <div className="flex items-center gap-2 text-slate-700 truncate pr-2">
+                          <span
+                            className="w-2.5 h-2.5 rounded-full shrink-0"
+                            style={{ backgroundColor: cat.color }}
+                          />
+                          <span className="truncate">{cat.name}</span>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <span className="font-bold text-slate-900 mr-2">{cat.percentage}%</span>
+                          <span className="text-slate-400">{cat.count} designs</span>
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <span className="font-bold text-slate-900 mr-2">42%</span>
-                        <span className="text-slate-400">₹53,940</span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between font-semibold">
-                      <div className="flex items-center gap-2 text-slate-700">
-                        <span className="w-2.5 h-2.5 rounded-full bg-[#10b981] shrink-0" />
-                        <span>Pure Banarasi Sarees</span>
-                      </div>
-                      <div className="text-right">
-                        <span className="font-bold text-slate-900 mr-2">28%</span>
-                        <span className="text-slate-400">₹35,960</span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between font-semibold">
-                      <div className="flex items-center gap-2 text-slate-700">
-                        <span className="w-2.5 h-2.5 rounded-full bg-[#14b8a6] shrink-0" />
-                        <span>Bridal & Party Lehengas</span>
-                      </div>
-                      <div className="text-right">
-                        <span className="font-bold text-slate-900 mr-2">18%</span>
-                        <span className="text-slate-400">₹23,115</span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between font-semibold">
-                      <div className="flex items-center gap-2 text-slate-700">
-                        <span className="w-2.5 h-2.5 rounded-full bg-[#818cf8] shrink-0" />
-                        <span>Handbags & Accessories</span>
-                      </div>
-                      <div className="text-right">
-                        <span className="font-bold text-slate-900 mr-2">12%</span>
-                        <span className="text-slate-400">₹15,415</span>
-                      </div>
-                    </div>
+                    ))}
                   </div>
                 </div>
 
-                {/* Acquisition Attribution Bar (Bottom of Card) */}
+                {/* Real Payment Method Breakdown (Bottom of Card) */}
                 <div className="pt-4 border-t border-slate-100 space-y-2">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
-                    Acquisition Attribution
+                    Payment Method Breakdown
                   </span>
                   <div className="h-2 w-full bg-slate-100 rounded-full flex overflow-hidden">
-                    <div className="h-full bg-[#4f46e5] w-[45%]" title="Direct: 45%" />
-                    <div className="h-full bg-[#10b981] w-[32%]" title="Social: 32%" />
-                    <div className="h-full bg-[#14b8a6] w-[23%]" title="Organic: 23%" />
+                    <div
+                      className="h-full bg-[#4f46e5]"
+                      style={{ width: `${stats.upiPct}%` }}
+                      title={`UPI / Online: ${stats.upiPct}%`}
+                    />
+                    <div
+                      className="h-full bg-[#10b981]"
+                      style={{ width: `${stats.codPct}%` }}
+                      title={`Cash on Delivery: ${stats.codPct}%`}
+                    />
                   </div>
                   <div className="flex items-center justify-between text-[10px] text-slate-500 font-semibold">
-                    <span>Direct: 45%</span>
-                    <span>Social: 32%</span>
-                    <span>Organic: 23%</span>
+                    <span>UPI / Online: {stats.upiPct}%</span>
+                    <span>Cash on Delivery: {stats.codPct}%</span>
                   </div>
                 </div>
               </div>
@@ -1513,24 +1563,24 @@ For any tailoring or exchange questions, call us directly at ${settings.phone}.`
                 </table>
               </div>
 
-              {/* Pagination (Image 2 Exact Layout) */}
+              {/* Pagination (Accurate real order count) */}
               <div className="pt-4 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between text-xs text-slate-400 gap-3">
-                <span>Showing 1 to {Math.min(6, filteredOrders.length)} of {orders.length} results</span>
+                <span>
+                  Showing {filteredOrders.length === 0 ? 0 : 1} to {Math.min(6, filteredOrders.length)} of {filteredOrders.length} order{filteredOrders.length === 1 ? "" : "s"}
+                </span>
                 <div className="flex items-center gap-1 font-semibold">
-                  <button className="px-2.5 py-1 text-slate-400 hover:text-slate-700 transition">
+                  <button className="px-2.5 py-1 text-slate-400 cursor-not-allowed">
                     &lt; Previous
                   </button>
                   <button className="w-7 h-7 bg-[#4f46e5] text-white rounded-lg font-bold flex items-center justify-center shadow-xs">
                     1
                   </button>
-                  <button className="w-7 h-7 text-slate-600 hover:bg-slate-100 rounded-lg flex items-center justify-center transition">
-                    2
-                  </button>
-                  <button className="w-7 h-7 text-slate-600 hover:bg-slate-100 rounded-lg flex items-center justify-center transition">
-                    3
-                  </button>
-                  <span className="px-1 text-slate-300">...</span>
-                  <button className="px-2.5 py-1 text-slate-600 hover:text-slate-900 transition">
+                  {filteredOrders.length > 6 && (
+                    <button className="w-7 h-7 text-slate-600 hover:bg-slate-100 rounded-lg flex items-center justify-center transition">
+                      2
+                    </button>
+                  )}
+                  <button className={`px-2.5 py-1 ${filteredOrders.length > 6 ? "text-slate-600 hover:text-slate-900" : "text-slate-300 cursor-not-allowed"}`}>
                     Next &gt;
                   </button>
                 </div>
@@ -1850,18 +1900,18 @@ For any tailoring or exchange questions, call us directly at ${settings.phone}.`
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
               <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs">
                 <span className="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-1">Total Customers</span>
-                <span className="text-2xl font-extrabold text-slate-900">14,290</span>
-                <span className="text-xs text-emerald-600 font-bold block mt-1">↑ +21.4% this month</span>
+                <span className="text-2xl font-extrabold text-slate-900">{stats.totalCustomers}</span>
+                <span className="text-xs text-emerald-600 font-bold block mt-1">Verified phone checkouts</span>
               </div>
               <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs">
                 <span className="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-1">Repeat Purchase Rate</span>
-                <span className="text-2xl font-extrabold text-slate-900">48.2%</span>
-                <span className="text-xs text-slate-400 font-medium block mt-1">High showroom loyalty</span>
+                <span className="text-2xl font-extrabold text-slate-900">{stats.repeatRate}%</span>
+                <span className="text-xs text-slate-400 font-medium block mt-1">{stats.repeatCustomersCount} repeat shopper{stats.repeatCustomersCount === 1 ? "" : "s"}</span>
               </div>
               <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs">
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-1">VIP Haridwar Clients</span>
-                <span className="text-2xl font-extrabold text-slate-900">840+</span>
-                <span className="text-xs text-[#4f46e5] font-bold block mt-1">Bridal couture members</span>
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-1">Total Orders Logged</span>
+                <span className="text-2xl font-extrabold text-slate-900">{stats.totalOrders}</span>
+                <span className="text-xs text-[#4f46e5] font-bold block mt-1">₹{stats.totalSales.toLocaleString("en-IN")} total volume</span>
               </div>
             </div>
 
@@ -1906,24 +1956,24 @@ For any tailoring or exchange questions, call us directly at ${settings.phone}.`
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
               <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs">
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-1">Conversion Rate</span>
-                <span className="text-2xl font-extrabold text-slate-900">3.84%</span>
-                <span className="text-xs text-emerald-600 font-bold block mt-1">↑ +0.6% vs benchmark</span>
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-1">Completed Orders</span>
+                <span className="text-2xl font-extrabold text-slate-900">{stats.totalOrders}</span>
+                <span className="text-xs text-emerald-600 font-bold block mt-1">{stats.deliveredOrders} delivered • {stats.pendingOrders} pending</span>
               </div>
               <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs">
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-1">Total Page Views</span>
-                <span className="text-2xl font-extrabold text-slate-900">84,290</span>
-                <span className="text-xs text-slate-400 font-medium block mt-1">In last 30 days</span>
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-1">Catalog Designs</span>
+                <span className="text-2xl font-extrabold text-slate-900">{stats.totalProducts}</span>
+                <span className="text-xs text-slate-400 font-medium block mt-1">{stats.catalogStockUnits} units in stock</span>
               </div>
               <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs">
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-1">Cart Abandonment</span>
-                <span className="text-2xl font-extrabold text-slate-900">28.4%</span>
-                <span className="text-xs text-emerald-600 font-bold block mt-1">Low across industry</span>
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-1">Inventory Valuation</span>
+                <span className="text-2xl font-extrabold text-slate-900">₹{stats.catalogValue.toLocaleString("en-IN")}</span>
+                <span className="text-xs text-emerald-600 font-bold block mt-1">Retail asset value</span>
               </div>
               <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs">
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-1">Avg. Session Time</span>
-                <span className="text-2xl font-extrabold text-slate-900">4m 18s</span>
-                <span className="text-xs text-slate-400 font-medium block mt-1">High engagement</span>
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-1">Avg. Order Value</span>
+                <span className="text-2xl font-extrabold text-slate-900">₹{stats.avgOrderValue.toLocaleString("en-IN")}</span>
+                <span className="text-xs text-slate-400 font-medium block mt-1">Across {stats.totalOrders} order{stats.totalOrders === 1 ? "" : "s"}</span>
               </div>
             </div>
           </main>
