@@ -42,7 +42,10 @@ import {
   Palette,
   Monitor,
   Smartphone,
-  Sliders
+  Sliders,
+  Upload,
+  Camera,
+  Image as ImageIcon
 } from "lucide-react";
 import { ProductItem, CustomerOrder, ProductCategory } from "@/types/store";
 import { AdminStore, AdminStoreSettings, DEFAULT_SETTINGS } from "@/lib/adminStore";
@@ -55,6 +58,21 @@ type AdminTab = "dashboard" | "products" | "orders" | "editor" | "seo" | "settin
 const AVAILABLE_SIZES = [
   "XS (34)", "S (36)", "M (38)", "L (40)", "XL (42)", "XXL (44)", "3XL (46)",
   "Free Size", "Semi-Stitched", "Unstitched (6.3m)", "Size 28", "Size 30", "Size 32", "Size 34", "Size 36", "Size 38", "Size 40"
+];
+
+const AVAILABLE_COLORS = [
+  { name: "Rani Pink", hex: "#e02b66" },
+  { name: "Maroon", hex: "#800000" },
+  { name: "Red", hex: "#dc2626" },
+  { name: "Royal Blue", hex: "#2563eb" },
+  { name: "Emerald Green", hex: "#059669" },
+  { name: "Mustard Yellow", hex: "#d97706" },
+  { name: "Antique Gold", hex: "#d4af37" },
+  { name: "Wine / Burgundy", hex: "#4a0e2e" },
+  { name: "Black", hex: "#18181b" },
+  { name: "Ivory White", hex: "#faf0e6" },
+  { name: "Pastel Peach", hex: "#fdba74" },
+  { name: "Navy Blue", hex: "#1e3a8a" },
 ];
 
 const PRESET_PRODUCT_IMAGES = [
@@ -95,6 +113,7 @@ export default function AdminPage() {
   const [editingProduct, setEditingProduct] = useState<Partial<ProductItem> | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<CustomerOrder | null>(null);
   const [copyStatus, setCopyStatus] = useState<string>("");
+  const [productToast, setProductToast] = useState<string | null>(null);
 
   // Initialize data on mount
   useEffect(() => {
@@ -233,6 +252,53 @@ export default function AdminPage() {
     setIsProductModalOpen(true);
   };
 
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    Array.from(files).forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const result = event.target?.result as string;
+        if (result) {
+          setEditingProduct((prev) => {
+            if (!prev) return null;
+            const currentImages = prev.images || (prev.imageUrl ? [prev.imageUrl] : []);
+            if (currentImages.includes(result)) return prev;
+            const updated = [...currentImages, result];
+            return {
+              ...prev,
+              imageUrl: prev.imageUrl && prev.imageUrl !== "/products/product 1.png" ? prev.imageUrl : result,
+              images: updated,
+            };
+          });
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleRemoveImage = (imgToRemove: string) => {
+    if (!editingProduct) return;
+    const currentImages = (editingProduct.images || []).filter((img) => img !== imgToRemove);
+    const newPrimary = editingProduct.imageUrl === imgToRemove
+      ? (currentImages[0] || "/products/product 1.png")
+      : (editingProduct.imageUrl || "/products/product 1.png");
+    setEditingProduct({
+      ...editingProduct,
+      imageUrl: newPrimary,
+      images: currentImages,
+    });
+  };
+
+  const handleSetPrimaryImage = (img: string) => {
+    if (!editingProduct) return;
+    setEditingProduct({
+      ...editingProduct,
+      imageUrl: img,
+    });
+  };
+
   const handleSaveProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingProduct || !editingProduct.name || !editingProduct.sku) return;
@@ -247,7 +313,7 @@ export default function AdminPage() {
       mrp: Number(editingProduct.mrp) || Number(editingProduct.price) * 2,
       purchaseCost: Number(editingProduct.purchaseCost) || 0,
       stock: Number(editingProduct.stock) || 0,
-      sizes: editingProduct.sizes || ["Free Size"],
+      sizes: editingProduct.sizes && editingProduct.sizes.length > 0 ? editingProduct.sizes : ["Free Size"],
       colors: editingProduct.colors || [],
       badge: editingProduct.badge || undefined,
       imageUrl: editingProduct.imageUrl || editingProduct.images?.[0] || "/products/product 1.png",
@@ -265,6 +331,8 @@ export default function AdminPage() {
     setProducts(AdminStore.getProducts());
     setIsProductModalOpen(false);
     setEditingProduct(null);
+    setProductToast(`"${fullProduct.name}" saved to store catalog!`);
+    setTimeout(() => setProductToast(null), 4000);
   };
 
   const handleDeleteProduct = async (id: string, name: string) => {
@@ -395,7 +463,22 @@ For any tailoring or exchange questions, call us directly at ${settings.phone}.`
   // AUTHENTICATED SHOPIFY-STYLE ADMIN DASHBOARD
   // ----------------------------------------------------
   return (
-    <div className="min-h-screen bg-[#f1f2f4] text-stone-900 font-sans flex antialiased">
+    <div className="min-h-screen bg-[#f1f2f4] text-stone-900 font-sans flex antialiased relative">
+      {/* Toast Notification */}
+      {productToast && (
+        <div className="fixed top-4 right-4 z-[999] bg-stone-900 text-white px-4 py-3 rounded-xl shadow-2xl border border-stone-700 flex items-center gap-3">
+          <div className="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+            <CheckCircle2 className="w-4 h-4" />
+          </div>
+          <span className="text-xs font-semibold">{productToast}</span>
+          <button
+            onClick={() => setProductToast(null)}
+            className="text-stone-400 hover:text-white p-1"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
       {/* 1. LEFT SIDEBAR (Shopify Dark Navy / Charcoal Style) */}
       <aside className="w-64 bg-[#1a1c23] text-stone-300 shrink-0 flex flex-col justify-between hidden md:flex border-r border-stone-800 shadow-xl">
         <div>
@@ -2054,37 +2137,109 @@ For any tailoring or exchange questions, call us directly at ${settings.phone}.`
                 </div>
               </div>
 
-              {/* 3. Media & Images */}
+              {/* 3. Media & Images (Shopify Multi-Image Gallery + Device Upload) */}
               <div className="space-y-4">
-                <h4 className="font-bold text-stone-800 text-sm border-b border-stone-100 pb-2">
-                  Product Image / Gallery
-                </h4>
-
-                <div>
-                  <label className="block font-semibold text-stone-700 mb-1">Primary Image Path or URL</label>
-                  <input
-                    type="text"
-                    placeholder="/products/product 1.png or https://..."
-                    value={editingProduct.imageUrl || ""}
-                    onChange={(e) => setEditingProduct({ ...editingProduct, imageUrl: e.target.value })}
-                    className="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-lg focus:outline-none focus:border-[#a81c24]"
-                  />
+                <div className="flex items-center justify-between border-b border-stone-100 pb-2">
+                  <h4 className="font-bold text-stone-800 text-sm flex items-center gap-2">
+                    <ImageIcon className="w-4 h-4 text-[#a81c24]" />
+                    Product Photos & Gallery
+                  </h4>
+                  <span className="text-[11px] text-stone-500">
+                    {((editingProduct.images?.length || 0) + (editingProduct.imageUrl && !editingProduct.images?.includes(editingProduct.imageUrl) ? 1 : 0))} photo(s) attached
+                  </span>
                 </div>
 
+                {/* Upload from Device / Phone */}
+                <label className="border-2 border-dashed border-stone-300 hover:border-[#a81c24] bg-stone-50/70 hover:bg-red-50/20 rounded-xl p-5 flex flex-col items-center justify-center cursor-pointer transition text-center group">
+                  <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center text-[#a81c24] mb-2 group-hover:scale-110 transition">
+                    <Upload className="w-5 h-5" />
+                  </div>
+                  <span className="font-bold text-stone-800 text-xs">
+                    Upload Photos from Phone or PC
+                  </span>
+                  <span className="text-[10px] text-stone-500 mt-0.5">
+                    Select one or multiple photos from gallery / camera (JPG, PNG, WEBP)
+                  </span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleImageUpload}
+                    className="hidden"
+                  />
+                </label>
+
+                {/* Gallery of Uploaded Photos */}
+                {editingProduct.images && editingProduct.images.length > 0 && (
+                  <div>
+                    <span className="block text-[11px] font-semibold text-stone-700 mb-2">
+                      Selected Photos (Click photo to set as Primary thumbnail):
+                    </span>
+                    <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+                      {editingProduct.images.map((img, idx) => {
+                        const isPrimary = (editingProduct.imageUrl || editingProduct.images?.[0]) === img;
+                        return (
+                          <div
+                            key={idx}
+                            className={`group relative aspect-[3/4] rounded-lg overflow-hidden border-2 transition ${
+                              isPrimary ? "border-[#a81c24] ring-2 ring-red-200" : "border-stone-200 hover:border-stone-400"
+                            }`}
+                          >
+                            {img.startsWith("data:") ? (
+                              <img src={img} alt="preview" className="w-full h-full object-cover" />
+                            ) : (
+                              <Image src={img} alt="preview" fill className="object-cover" />
+                            )}
+                            {isPrimary && (
+                              <span className="absolute top-1 left-1 bg-[#a81c24] text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow-xs">
+                                Primary
+                              </span>
+                            )}
+                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex flex-col items-center justify-center gap-1 p-1">
+                              {!isPrimary && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleSetPrimaryImage(img)}
+                                  className="px-2 py-0.5 bg-white text-stone-900 text-[10px] font-bold rounded shadow-xs hover:bg-stone-100"
+                                >
+                                  Set Primary
+                                </button>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveImage(img)}
+                                className="p-1 bg-red-600 text-white rounded hover:bg-red-700 transition"
+                                title="Delete photo"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Preset Photoshoot Quick Select */}
                 <div>
-                  <span className="block text-[11px] font-semibold text-stone-600 mb-2">Or select a preset product photoshoot image:</span>
+                  <span className="block text-[11px] font-semibold text-stone-600 mb-2">
+                    Or pick from Haridwar Showroom Photoshoot:
+                  </span>
                   <div className="flex gap-2 overflow-x-auto pb-2">
                     {PRESET_PRODUCT_IMAGES.map((img) => (
                       <button
                         type="button"
                         key={img}
-                        onClick={() =>
+                        onClick={() => {
+                          const cur = editingProduct.images || [];
+                          const updated = cur.includes(img) ? cur : [...cur, img];
                           setEditingProduct({
                             ...editingProduct,
                             imageUrl: img,
-                            images: [img],
-                          })
-                        }
+                            images: updated,
+                          });
+                        }}
                         className={`w-14 h-16 rounded-md border-2 overflow-hidden relative shrink-0 transition ${
                           editingProduct.imageUrl === img ? "border-[#a81c24] ring-2 ring-red-200" : "border-stone-200"
                         }`}
@@ -2094,12 +2249,33 @@ For any tailoring or exchange questions, call us directly at ${settings.phone}.`
                     ))}
                   </div>
                 </div>
+
+                {/* Optional Custom Image URL */}
+                <div>
+                  <label className="block font-semibold text-stone-700 mb-1">
+                    Or Enter Direct Image URL (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="https://... or /products/sample.png"
+                    value={editingProduct.imageUrl || ""}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setEditingProduct({
+                        ...editingProduct,
+                        imageUrl: val,
+                        images: val ? [val, ...(editingProduct.images || []).filter(i => i !== val)] : editingProduct.images,
+                      });
+                    }}
+                    className="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-lg focus:outline-none focus:border-[#a81c24]"
+                  />
+                </div>
               </div>
 
               {/* 4. Sizes & Details */}
               <div className="space-y-4">
                 <h4 className="font-bold text-stone-800 text-sm border-b border-stone-100 pb-2">
-                  Sizes & Garment Specs
+                  Sizes, Colors & Garment Specs
                 </h4>
 
                 <div>
@@ -2123,6 +2299,39 @@ For any tailoring or exchange questions, call us directly at ${settings.phone}.`
                           }`}
                         >
                           {sz}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Color Variants (Shopify Feature) */}
+                <div>
+                  <label className="block font-semibold text-stone-700 mb-1">Color Palette (Click to toggle)</label>
+                  <div className="flex flex-wrap gap-2">
+                    {AVAILABLE_COLORS.map((col) => {
+                      const selected = editingProduct.colors?.includes(col.name);
+                      return (
+                        <button
+                          type="button"
+                          key={col.name}
+                          onClick={() => {
+                            const cur = editingProduct.colors || [];
+                            const next = selected ? cur.filter((c) => c !== col.name) : [...cur, col.name];
+                            setEditingProduct({ ...editingProduct, colors: next });
+                          }}
+                          className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-medium border transition ${
+                            selected
+                              ? "border-[#a81c24] bg-red-50 text-stone-900 font-bold ring-1 ring-[#a81c24]"
+                              : "border-stone-200 bg-stone-50 text-stone-700 hover:bg-stone-100"
+                          }`}
+                        >
+                          <span
+                            className="w-3 h-3 rounded-full border border-black/20 shrink-0"
+                            style={{ backgroundColor: col.hex }}
+                          />
+                          <span>{col.name}</span>
+                          {selected && <Check className="w-3 h-3 text-[#a81c24] ml-0.5" />}
                         </button>
                       );
                     })}
@@ -2160,6 +2369,72 @@ For any tailoring or exchange questions, call us directly at ${settings.phone}.`
                       onChange={(e) => setEditingProduct({ ...editingProduct, description: e.target.value })}
                       className="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-lg focus:outline-none"
                     />
+                  </div>
+                </div>
+              </div>
+
+              {/* LIVE STOREFRONT CARD PREVIEW (Shopify Preview) */}
+              <div className="p-4 bg-stone-50 rounded-xl border border-stone-200 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-stone-800 text-xs flex items-center gap-1.5">
+                    <Eye className="w-3.5 h-3.5 text-[#a81c24]" />
+                    Customer Storefront Card Live Preview
+                  </span>
+                  <span className="text-[10px] text-stone-500">Live preview of how customers see this product</span>
+                </div>
+                <div className="max-w-xs mx-auto bg-white rounded-xl border border-stone-200 overflow-hidden shadow-sm">
+                  <div className="relative aspect-[3/4] bg-stone-100">
+                    {editingProduct.imageUrl ? (
+                      editingProduct.imageUrl.startsWith("data:") ? (
+                        <img src={editingProduct.imageUrl} alt="preview" className="w-full h-full object-cover" />
+                      ) : (
+                        <Image src={editingProduct.imageUrl} alt="preview" fill className="object-cover" />
+                      )
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-stone-400 text-xs">
+                        No image uploaded
+                      </div>
+                    )}
+                    {editingProduct.badge && (
+                      <span className="absolute top-2 left-2 bg-[#a81c24] text-white text-[10px] font-bold px-2 py-0.5 rounded">
+                        {editingProduct.badge}
+                      </span>
+                    )}
+                  </div>
+                  <div className="p-3 space-y-1.5">
+                    <span className="text-[10px] font-semibold text-stone-500 uppercase tracking-wider block">
+                      {editingProduct.category || "Kurtis"}
+                    </span>
+                    <h5 className="font-bold text-stone-900 text-xs line-clamp-1">
+                      {editingProduct.name || "Product Title Preview"}
+                    </h5>
+                    <div className="flex items-baseline gap-2 pt-0.5">
+                      <span className="text-sm font-extrabold text-stone-900">
+                        ₹{(editingProduct.price || 0).toLocaleString("en-IN")}
+                      </span>
+                      {Number(editingProduct.mrp) > Number(editingProduct.price) && (
+                        <>
+                          <span className="text-[11px] text-stone-400 line-through">
+                            ₹{Number(editingProduct.mrp).toLocaleString("en-IN")}
+                          </span>
+                          <span className="text-[10px] text-emerald-700 font-bold">
+                            Save ₹{(Number(editingProduct.mrp) - Number(editingProduct.price)).toLocaleString("en-IN")}
+                          </span>
+                        </>
+                      )}
+                    </div>
+                    {editingProduct.sizes && editingProduct.sizes.length > 0 && (
+                      <div className="flex flex-wrap gap-1 pt-1">
+                        {editingProduct.sizes.slice(0, 4).map((s) => (
+                          <span key={s} className="px-1.5 py-0.5 text-[9px] bg-stone-100 rounded text-stone-700 font-medium">
+                            {s}
+                          </span>
+                        ))}
+                        {editingProduct.sizes.length > 4 && (
+                          <span className="text-[9px] text-stone-400">+{editingProduct.sizes.length - 4}</span>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

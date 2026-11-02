@@ -4,7 +4,7 @@ import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { MapPin, Phone, Mail, Clock, ShieldCheck, Sparkles, Heart } from "lucide-react";
+import { MapPin, Phone, Mail, Clock, ShieldCheck, Sparkles, Heart, Lock } from "lucide-react";
 import { SITE_CONFIG } from "@/lib/seoEngine";
 
 export default function Footer() {
@@ -136,10 +136,19 @@ export default function Footer() {
         {/* Bottom Bar */}
         <div className="pt-8 border-t border-stone-800 flex flex-col sm:flex-row items-center justify-between text-xs text-stone-500 gap-3">
           <p>© {new Date().getFullYear()} Rajnandini Boutique Haridwar. All Rights Reserved.</p>
-          <div className="flex items-center gap-1 text-[11px] text-stone-400">
-            <span>Made with</span>
-            <Heart className="w-3.5 h-3.5 text-[#e02b37] fill-[#e02b37]" />
-            <span>for Indian Ethnic Couture</span>
+          <div className="flex items-center gap-4">
+            <Link
+              href="/admin"
+              className="text-stone-400 hover:text-white transition flex items-center gap-1.5 text-[11px] bg-stone-900/80 px-2.5 py-1 rounded border border-stone-800 hover:border-stone-700"
+            >
+              <Lock className="w-3 h-3 text-[#e02b37]" />
+              <span>Store Admin Portal</span>
+            </Link>
+            <div className="flex items-center gap-1 text-[11px] text-stone-400">
+              <span>Made with</span>
+              <Heart className="w-3.5 h-3.5 text-[#e02b37] fill-[#e02b37]" />
+              <span>for Indian Ethnic Couture</span>
+            </div>
           </div>
         </div>
       </div>
