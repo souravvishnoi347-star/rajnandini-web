@@ -7,6 +7,7 @@ const LOCAL_STORAGE_PRODUCTS_KEY = "rajnandini_admin_products";
 const LOCAL_STORAGE_ORDERS_KEY = "rajnandini_admin_orders";
 const LOCAL_STORAGE_AUTH_KEY = "rajnandini_admin_authenticated";
 const LOCAL_STORAGE_SETTINGS_KEY = "rajnandini_admin_settings";
+const LOCAL_STORAGE_CATALOG_CLEAN_KEY = "rajnandini_catalog_clean_v1";
 
 export const DEFAULT_ADMIN_PIN = "7464"; // Also accepts "rajnandini2026"
 
@@ -152,10 +153,16 @@ export const AdminStore = {
   getProducts(): ProductItem[] {
     if (typeof window === "undefined") return INITIAL_PRODUCTS;
     try {
+      // Purge old sample catalog cache once
+      if (localStorage.getItem(LOCAL_STORAGE_CATALOG_CLEAN_KEY) !== "true") {
+        localStorage.removeItem(LOCAL_STORAGE_PRODUCTS_KEY);
+        localStorage.setItem(LOCAL_STORAGE_CATALOG_CLEAN_KEY, "true");
+      }
+
       const stored = localStorage.getItem(LOCAL_STORAGE_PRODUCTS_KEY);
-      if (stored) {
+      if (stored !== null) {
         const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed) && parsed.length > 0) {
+        if (Array.isArray(parsed)) {
           return parsed;
         }
       }
@@ -165,6 +172,10 @@ export const AdminStore = {
     // Initialize with INITIAL_PRODUCTS if empty
     this.saveProductsLocally(INITIAL_PRODUCTS);
     return INITIAL_PRODUCTS;
+  },
+
+  deleteAllProducts(): void {
+    this.saveProductsLocally([]);
   },
 
   saveProductsLocally(products: ProductItem[]) {

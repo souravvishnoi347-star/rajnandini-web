@@ -14,8 +14,19 @@ interface CategoryPageProps {
 
 export async function generateStaticParams() {
   const products = await getAllProducts();
-  const categories = Array.from(new Set(products.map((p) => p.category)));
-  return categories.map((cat) => ({
+  const productCats = products.map((p) => p.category).filter(Boolean);
+  const defaultCats = [
+    "all",
+    "kurtis",
+    "kurti-sets",
+    "sarees",
+    "lehengas",
+    "bridal-lehenga",
+    "purses",
+    "juti",
+  ];
+  const allCategories = Array.from(new Set([...defaultCats, ...productCats]));
+  return allCategories.map((cat) => ({
     category: encodeURIComponent(cat),
   }));
 }

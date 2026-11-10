@@ -21,6 +21,25 @@ export default function HomeClientView({ initialProducts }: HomeClientViewProps)
     // Load local theme config
     setTheme(ThemeService.getTheme());
 
+    // Purge old sample catalog once if needed and sync local products
+    try {
+      if (localStorage.getItem("rajnandini_catalog_clean_v1") !== "true") {
+        localStorage.removeItem("rajnandini_admin_products");
+        localStorage.setItem("rajnandini_catalog_clean_v1", "true");
+        setProducts([]);
+      } else {
+        const stored = localStorage.getItem("rajnandini_admin_products");
+        if (stored !== null) {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed)) {
+            setProducts(parsed);
+          }
+        }
+      }
+    } catch (e) {
+      console.warn("Could not sync local products:", e);
+    }
+
     // Listen for theme and catalog updates from Admin
     const handleThemeUpdate = () => {
       setTheme(ThemeService.getTheme());
@@ -29,9 +48,9 @@ export default function HomeClientView({ initialProducts }: HomeClientViewProps)
     const handleCatalogUpdate = () => {
       try {
         const stored = localStorage.getItem("rajnandini_admin_products");
-        if (stored) {
+        if (stored !== null) {
           const parsed = JSON.parse(stored);
-          if (Array.isArray(parsed) && parsed.length > 0) {
+          if (Array.isArray(parsed)) {
             setProducts(parsed);
           }
         }
@@ -175,23 +194,43 @@ export default function HomeClientView({ initialProducts }: HomeClientViewProps)
           </h2>
         </div>
 
-        {/* 4 Columns Product Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-          {(kurtiSets.length > 0 ? kurtiSets.slice(0, 8) : featuredBestsellers.slice(0, 4)).map(
-            (product) => (
-              <ProductCard key={product.id || product.sku} product={product} />
-            )
-          )}
-        </div>
-
-        <div className="text-center pt-8">
-          <Link
-            href="/collections/kurti-sets"
-            className="inline-block px-10 py-3 bg-[#a81c24] hover:bg-[#8e171e] text-white text-xs font-bold uppercase tracking-wider rounded-sm transition shadow-sm"
-          >
-            VIEW ALL KURTIS & SUITS
-          </Link>
-        </div>
+        {/* 4 Columns Product Grid or Elegant Empty State */}
+        {kurtiSets.length > 0 ? (
+          <>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+              {kurtiSets.slice(0, 8).map((product) => (
+                <ProductCard key={product.id || product.sku} product={product} />
+              ))}
+            </div>
+            <div className="text-center pt-8">
+              <Link
+                href="/collections/kurti-sets"
+                className="inline-block px-10 py-3 bg-[#a81c24] hover:bg-[#8e171e] text-white text-xs font-bold uppercase tracking-wider rounded-sm transition shadow-sm"
+              >
+                VIEW ALL KURTIS & SUITS
+              </Link>
+            </div>
+          </>
+        ) : (
+          <div className="text-center py-12 px-4 rounded-2xl bg-[#fdfaf7] border border-dashed border-stone-300 space-y-3">
+            <p className="font-serif font-bold text-stone-900 text-base sm:text-lg">
+              New Festive Collection Arriving Soon
+            </p>
+            <p className="text-stone-600 text-xs sm:text-sm max-w-md mx-auto">
+              Our latest boutique Kurtis, Anarkalis & Sharara sets are being curated for this season. Connect on WhatsApp for video walkthrough and custom designs.
+            </p>
+            <div className="pt-2">
+              <a
+                href="https://api.whatsapp.com/send?phone=919897123450&text=Namaste%20Indu%20Ji!%20Please%20share%20your%20latest%20Kurti%20and%20Suit%20designs."
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-bold uppercase tracking-wider rounded-sm transition shadow-sm"
+              >
+                <span>WhatsApp Indu Sharma</span>
+              </a>
+            </div>
+          </div>
+        )}
       </section>
 
       {/* 4. SECTION TWO: BRIDAL LEHENGAS & SAREES */}
@@ -205,23 +244,43 @@ export default function HomeClientView({ initialProducts }: HomeClientViewProps)
           </h2>
         </div>
 
-        {/* 4 Columns Product Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-          {(bridalAndSarees.length > 0 ? bridalAndSarees.slice(0, 8) : featuredBestsellers.slice(4, 8)).map(
-            (product) => (
-              <ProductCard key={product.id || product.sku} product={product} />
-            )
-          )}
-        </div>
-
-        <div className="text-center pt-8">
-          <Link
-            href="/collections/sarees"
-            className="inline-block px-10 py-3 bg-[#a81c24] hover:bg-[#8e171e] text-white text-xs font-bold uppercase tracking-wider rounded-sm transition shadow-sm"
-          >
-            VIEW ALL SAREES & LEHENGAS
-          </Link>
-        </div>
+        {/* 4 Columns Product Grid or Elegant Empty State */}
+        {bridalAndSarees.length > 0 ? (
+          <>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+              {bridalAndSarees.slice(0, 8).map((product) => (
+                <ProductCard key={product.id || product.sku} product={product} />
+              ))}
+            </div>
+            <div className="text-center pt-8">
+              <Link
+                href="/collections/sarees"
+                className="inline-block px-10 py-3 bg-[#a81c24] hover:bg-[#8e171e] text-white text-xs font-bold uppercase tracking-wider rounded-sm transition shadow-sm"
+              >
+                VIEW ALL SAREES & LEHENGAS
+              </Link>
+            </div>
+          </>
+        ) : (
+          <div className="text-center py-12 px-4 rounded-2xl bg-[#fdfaf7] border border-dashed border-stone-300 space-y-3">
+            <p className="font-serif font-bold text-stone-900 text-base sm:text-lg">
+              Royal Bridal Couture & Sarees
+            </p>
+            <p className="text-stone-600 text-xs sm:text-sm max-w-md mx-auto">
+              Banarasi Sarees and Bridal Lehengas are available directly at our Haridwar boutique showroom. Enquire now for personal bridal consultations.
+            </p>
+            <div className="pt-2">
+              <a
+                href="https://api.whatsapp.com/send?phone=919897123450&text=Namaste%20Indu%20Ji!%20I%20am%20looking%20for%20Bridal%20Lehengas%20and%20Sarees."
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-bold uppercase tracking-wider rounded-sm transition shadow-sm"
+              >
+                <span>Book Bridal Consultation</span>
+              </a>
+            </div>
+          </div>
+        )}
       </section>
 
       {/* 5. AEO FAQ ACCORDION */}

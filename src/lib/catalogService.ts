@@ -35,10 +35,16 @@ export async function getAllProducts(): Promise<ProductItem[]> {
   let clientOverride: ProductItem[] | null = null;
   if (typeof window !== "undefined") {
     try {
+      // Purge old sample catalog cache once
+      if (localStorage.getItem("rajnandini_catalog_clean_v1") !== "true") {
+        localStorage.removeItem("rajnandini_admin_products");
+        localStorage.setItem("rajnandini_catalog_clean_v1", "true");
+      }
+
       const stored = localStorage.getItem("rajnandini_admin_products");
-      if (stored) {
+      if (stored !== null) {
         const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed) && parsed.length > 0) {
+        if (Array.isArray(parsed)) {
           clientOverride = parsed;
         }
       }
@@ -51,7 +57,7 @@ export async function getAllProducts(): Promise<ProductItem[]> {
     const remote = await SupabaseService.fetchLiveProducts();
     if (remote && remote.length > 0) {
       const remoteSkus = new Set(remote.map((p) => p.sku));
-      const pool = clientOverride || (INITIAL_PRODUCTS as ProductItem[]);
+      const pool = clientOverride !== null ? clientOverride : (INITIAL_PRODUCTS as ProductItem[]);
       const fallbacks = pool.filter((p) => !remoteSkus.has(p.sku));
       return [...remote, ...fallbacks].filter((p) => !p.isService);
     }
@@ -59,7 +65,7 @@ export async function getAllProducts(): Promise<ProductItem[]> {
     console.warn("Using fallback inventory:", err);
   }
 
-  if (clientOverride && clientOverride.length > 0) {
+  if (clientOverride !== null) {
     return clientOverride.filter((p) => !p.isService);
   }
 

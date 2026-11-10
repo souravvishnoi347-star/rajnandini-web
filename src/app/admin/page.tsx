@@ -419,6 +419,15 @@ export default function AdminPage() {
     }
   };
 
+  const handleClearAllProducts = () => {
+    if (confirm("Are you sure you want to remove all products from the store? Catalog will be emptied.")) {
+      AdminStore.deleteAllProducts();
+      setProducts([]);
+      setProductToast("All products removed. Store catalog is now empty.");
+      setTimeout(() => setProductToast(null), 3000);
+    }
+  };
+
   // Order Actions
   const handleUpdateOrderStatus = (orderNumber: string, status: CustomerOrder["status"]) => {
     AdminStore.updateOrderStatus(orderNumber, status);
@@ -1604,13 +1613,23 @@ For any tailoring or exchange questions, call us directly at ${settings.phone}.`
                 </p>
               </div>
 
-              <button
-                onClick={handleOpenAddProduct}
-                className="px-4 py-2 bg-[#4f46e5] hover:bg-[#4338ca] text-white text-xs font-bold rounded-xl transition flex items-center gap-2 shadow-md shadow-indigo-500/25 active:scale-[0.98] self-start sm:self-auto"
-              >
-                <Plus className="w-4 h-4" />
-                <span>+ Add New Product</span>
-              </button>
+              <div className="flex items-center gap-2 self-start sm:self-auto">
+                {products.length > 0 && (
+                  <button
+                    onClick={handleClearAllProducts}
+                    className="px-3.5 py-2 bg-white border border-red-200 text-red-600 hover:bg-red-50 text-xs font-bold rounded-xl transition shadow-xs"
+                  >
+                    Clear All Products
+                  </button>
+                )}
+                <button
+                  onClick={handleOpenAddProduct}
+                  className="px-4 py-2 bg-[#4f46e5] hover:bg-[#4338ca] text-white text-xs font-bold rounded-xl transition flex items-center gap-2 shadow-md shadow-indigo-500/25 active:scale-[0.98]"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>+ Add New Product</span>
+                </button>
+              </div>
             </div>
 
             {/* Filter Bar */}
@@ -1659,106 +1678,127 @@ For any tailoring or exchange questions, call us directly at ${settings.phone}.`
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 font-medium">
-                    {filteredProducts.map((prod) => {
-                      const profit = prod.price - (prod.purchaseCost || 0);
-                      const marginPct = prod.purchaseCost ? Math.round((profit / prod.purchaseCost) * 100) : 50;
+                    {filteredProducts.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} className="py-16 text-center text-slate-400">
+                          <div className="space-y-3 max-w-sm mx-auto">
+                            <ShoppingBag className="w-10 h-10 mx-auto text-slate-300" />
+                            <p className="font-bold text-slate-800 text-sm">No products in store catalog</p>
+                            <p className="text-xs text-slate-400">
+                              All sample products have been removed. Click below to add your first real product with photos, price and stock.
+                            </p>
+                            <button
+                              onClick={handleOpenAddProduct}
+                              className="px-4 py-2 bg-[#4f46e5] text-white font-bold rounded-xl text-xs hover:bg-[#4338ca] transition shadow-xs inline-flex items-center gap-1.5"
+                            >
+                              <Plus className="w-3.5 h-3.5" />
+                              <span>+ Add First Product</span>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredProducts.map((prod) => {
+                        const profit = prod.price - (prod.purchaseCost || 0);
+                        const marginPct = prod.purchaseCost ? Math.round((profit / prod.purchaseCost) * 100) : 50;
 
-                      return (
-                        <tr key={prod.id} className="hover:bg-slate-50/70 transition">
-                          <td className="p-4">
-                            <div className="flex items-center gap-3">
-                              <div className="w-12 h-14 bg-slate-100 rounded-xl overflow-hidden relative shrink-0 border border-slate-200">
-                                {prod.imageUrl?.startsWith("data:") ? (
-                                  <img src={prod.imageUrl} alt={prod.name} className="w-full h-full object-cover" />
-                                ) : (
-                                  <Image
-                                    src={prod.imageUrl || "/products/product 1.png"}
-                                    alt={prod.name}
-                                    fill
-                                    className="object-cover"
-                                  />
-                                )}
-                              </div>
-                              <div className="min-w-0 max-w-xs">
-                                <span className="font-bold text-slate-900 block truncate" title={prod.name}>
-                                  {prod.name}
-                                </span>
-                                {prod.badge && (
-                                  <span className="inline-block text-[9px] font-bold text-[#4f46e5] bg-indigo-50 px-1.5 py-0.2 rounded mt-0.5">
-                                    {prod.badge}
+                        return (
+                          <tr key={prod.id} className="hover:bg-slate-50/70 transition">
+                            <td className="p-4">
+                              <div className="flex items-center gap-3">
+                                <div className="w-12 h-14 bg-slate-100 rounded-xl overflow-hidden relative shrink-0 border border-slate-200">
+                                  {prod.imageUrl?.startsWith("data:") ? (
+                                    <img src={prod.imageUrl} alt={prod.name} className="w-full h-full object-cover" />
+                                  ) : (
+                                    <Image
+                                      src={prod.imageUrl || "/products/product 1.png"}
+                                      alt={prod.name}
+                                      fill
+                                      className="object-cover"
+                                    />
+                                  )}
+                                </div>
+                                <div className="min-w-0 max-w-xs">
+                                  <span className="font-bold text-slate-900 block truncate" title={prod.name}>
+                                    {prod.name}
                                   </span>
-                                )}
+                                  {prod.badge && (
+                                    <span className="inline-block text-[9px] font-bold text-[#4f46e5] bg-indigo-50 px-1.5 py-0.2 rounded mt-0.5">
+                                      {prod.badge}
+                                    </span>
+                                  )}
+                                </div>
                               </div>
-                            </div>
-                          </td>
-                          <td className="p-4">
-                            <span className="font-mono font-bold text-slate-800 block">{prod.sku}</span>
-                            <span className="text-[10px] text-slate-400 font-mono">{prod.barcode}</span>
-                          </td>
-                          <td className="p-4 font-semibold text-slate-600">{prod.category}</td>
-                          <td className="p-4">
-                            {prod.stock > 5 ? (
-                              <span className="inline-flex items-center gap-1 text-emerald-700 font-bold bg-emerald-50 px-2.5 py-0.5 rounded-full text-[11px]">
-                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                                {prod.stock} in stock
+                            </td>
+                            <td className="p-4">
+                              <span className="font-mono font-bold text-slate-800 block">{prod.sku}</span>
+                              <span className="text-[10px] text-slate-400 font-mono">{prod.barcode}</span>
+                            </td>
+                            <td className="p-4 font-semibold text-slate-600">{prod.category}</td>
+                            <td className="p-4">
+                              {prod.stock > 5 ? (
+                                <span className="inline-flex items-center gap-1 text-emerald-700 font-bold bg-emerald-50 px-2.5 py-0.5 rounded-full text-[11px]">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                  {prod.stock} in stock
+                                </span>
+                              ) : prod.stock > 0 ? (
+                                <span className="inline-flex items-center gap-1 text-amber-700 font-bold bg-amber-50 px-2.5 py-0.5 rounded-full text-[11px]">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                                  Low: {prod.stock} left
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 text-red-700 font-bold bg-red-50 px-2.5 py-0.5 rounded-full text-[11px]">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                                  Out of stock
+                                </span>
+                              )}
+                            </td>
+                            <td className="p-4">
+                              <div className="font-bold text-slate-900">
+                                ₹{prod.price.toLocaleString("en-IN")}
+                                <span className="text-slate-400 line-through text-[10px] ml-1.5 font-normal">
+                                  ₹{prod.mrp.toLocaleString("en-IN")}
+                                </span>
+                              </div>
+                              <span className="text-[10px] text-emerald-600 font-bold">
+                                +{marginPct}% margin (₹{profit})
                               </span>
-                            ) : prod.stock > 0 ? (
-                              <span className="inline-flex items-center gap-1 text-amber-700 font-bold bg-amber-50 px-2.5 py-0.5 rounded-full text-[11px]">
-                                <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                                Low: {prod.stock} left
+                            </td>
+                            <td className="p-4">
+                              <span className="text-[10px] font-bold text-[#4f46e5] bg-indigo-50 px-2 py-0.5 rounded-full">
+                                AEO Indexed
                               </span>
-                            ) : (
-                              <span className="inline-flex items-center gap-1 text-red-700 font-bold bg-red-50 px-2.5 py-0.5 rounded-full text-[11px]">
-                                <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
-                                Out of stock
-                              </span>
-                            )}
-                          </td>
-                          <td className="p-4">
-                            <div className="font-bold text-slate-900">
-                              ₹{prod.price.toLocaleString("en-IN")}
-                              <span className="text-slate-400 line-through text-[10px] ml-1.5 font-normal">
-                                ₹{prod.mrp.toLocaleString("en-IN")}
-                              </span>
-                            </div>
-                            <span className="text-[10px] text-emerald-600 font-bold">
-                              +{marginPct}% margin (₹{profit})
-                            </span>
-                          </td>
-                          <td className="p-4">
-                            <span className="text-[10px] font-bold text-[#4f46e5] bg-indigo-50 px-2 py-0.5 rounded-full">
-                              AEO Indexed
-                            </span>
-                          </td>
-                          <td className="p-4 text-right">
-                            <div className="flex items-center justify-end gap-1">
-                              <Link
-                                href={`/products/${getProductSlug(prod)}`}
-                                target="_blank"
-                                title="View on storefront"
-                                className="p-1.5 text-slate-400 hover:text-slate-800 rounded-lg hover:bg-slate-100 transition"
-                              >
-                                <ExternalLink className="w-3.5 h-3.5" />
-                              </Link>
-                              <button
-                                onClick={() => handleEditProduct(prod)}
-                                title="Edit Product"
-                                className="p-1.5 text-slate-400 hover:text-[#4f46e5] rounded-lg hover:bg-slate-100 transition"
-                              >
-                                <Edit2 className="w-3.5 h-3.5" />
-                              </button>
-                              <button
-                                onClick={() => handleDeleteProduct(prod.id, prod.name)}
-                                title="Delete Product"
-                                className="p-1.5 text-slate-400 hover:text-red-600 rounded-lg hover:bg-slate-100 transition"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
+                            </td>
+                            <td className="p-4 text-right">
+                              <div className="flex items-center justify-end gap-1">
+                                <Link
+                                  href={`/products/${getProductSlug(prod)}`}
+                                  target="_blank"
+                                  title="View on storefront"
+                                  className="p-1.5 text-slate-400 hover:text-slate-800 rounded-lg hover:bg-slate-100 transition"
+                                >
+                                  <ExternalLink className="w-3.5 h-3.5" />
+                                </Link>
+                                <button
+                                  onClick={() => handleEditProduct(prod)}
+                                  title="Edit Product"
+                                  className="p-1.5 text-slate-400 hover:text-[#4f46e5] rounded-lg hover:bg-slate-100 transition"
+                                >
+                                  <Edit2 className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteProduct(prod.id, prod.name)}
+                                  title="Delete Product"
+                                  className="p-1.5 text-slate-400 hover:text-red-600 rounded-lg hover:bg-slate-100 transition"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
                   </tbody>
                 </table>
               </div>
