@@ -2,154 +2,134 @@
 
 import React from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { MapPin, Phone, Mail, Clock, ShieldCheck, Sparkles, Heart, Lock } from "lucide-react";
-import { SITE_CONFIG } from "@/lib/seoEngine";
 
 export default function Footer() {
   const pathname = usePathname();
   if (pathname?.startsWith("/admin")) return null;
+
   return (
-    <footer className="bg-[#121212] text-stone-300 border-t-4 border-[#a81c24] pt-14 pb-10">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Main Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
-          {/* Col 1: Brand & Heritage */}
-          <div className="space-y-4">
-            <Link href="/" className="inline-block bg-white rounded-lg px-3 py-2 shadow-sm border border-stone-800">
-              <Image
-                src="/logo.png"
-                alt="Rajnandini Boutique Haridwar"
-                width={190}
-                height={84}
-                className="h-12 w-auto object-contain"
-              />
-            </Link>
-            <p className="text-xs text-stone-400 leading-relaxed">
-              Uttarakhand&apos;s celebrated boutique for pre-draped sarees, royal bridal lehengas, pure Banarasi silk, and custom tailored anarkalis. Managed by Indu Sharma.
-            </p>
-            <div className="flex items-center gap-2 pt-2 text-xs text-stone-300 font-semibold">
-              <Sparkles className="w-4 h-4 text-[#e02b37] shrink-0" />
-              <span>Registered GST Boutique Showroom</span>
-            </div>
+    <footer className="bg-white text-stone-900 border-t border-stone-200/80 pt-16 pb-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+        {/* Brand & Tagline (Image 4 Style) */}
+        <div className="space-y-3 max-w-xl">
+          <Link href="/" className="inline-block">
+            <h2 className="font-serif font-black tracking-[0.22em] text-2xl sm:text-3xl text-stone-950 uppercase">
+              RAJNANDINI
+            </h2>
+          </Link>
+          <p className="text-xs sm:text-sm text-stone-600 font-serif leading-relaxed">
+            Haute Couture Salons in Haridwar, Rishikesh, Mehrauli (New Delhi), and Colaba (Mumbai).
+          </p>
+        </div>
+
+        {/* Directory Columns */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 pt-6 border-t border-stone-100">
+          {/* Showrooms */}
+          <div className="space-y-3">
+            <span className="text-[10px] font-mono font-bold tracking-[0.25em] uppercase text-stone-400 block">
+              SHOWROOMS
+            </span>
+            <ul className="space-y-2 text-xs font-serif text-stone-700">
+              <li>Colaba, Mumbai</li>
+              <li>Mehrauli, New Delhi</li>
+              <li>Arya Nagar, Haridwar</li>
+              <li>Tapovan, Rishikesh</li>
+            </ul>
           </div>
 
-          {/* Col 2: Top Categories */}
+          {/* Private Concierge */}
           <div className="space-y-3">
-            <h4 className="text-xs font-bold uppercase tracking-widest text-white border-b border-stone-800 pb-2">
-              Top Collections
-            </h4>
-            <ul className="space-y-2 text-xs">
+            <span className="text-[10px] font-mono font-bold tracking-[0.25em] uppercase text-stone-400 block">
+              PRIVATE CONCIERGE
+            </span>
+            <ul className="space-y-2 text-xs font-serif text-stone-700">
               <li>
-                <Link href="/collections/Gown" className="text-stone-400 hover:text-white transition">
-                  Anarkali Suits & Dresses
+                <a
+                  href="https://api.whatsapp.com/send?phone=919897123450&text=Namaste%20Indu%20Ji!%20I%20would%20like%20to%20enquire%20about%20Bridal%20Bespoke%20Couture."
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-stone-950 hover:underline transition"
+                >
+                  Bridal Bespoke Service
+                </a>
+              </li>
+              <li>Heritage Restoration</li>
+              <li>Global Secure Courier</li>
+              <li>
+                <a
+                  href="tel:+919897123450"
+                  className="font-mono text-[11px] font-semibold text-stone-900 hover:underline"
+                >
+                  +91 98971 23450
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          {/* Collections */}
+          <div className="space-y-3">
+            <span className="text-[10px] font-mono font-bold tracking-[0.25em] uppercase text-stone-400 block">
+              CURATIONS
+            </span>
+            <ul className="space-y-2 text-xs font-serif text-stone-700">
+              <li>
+                <Link href="/collections/bridal-lehenga" className="hover:text-stone-950 transition">
+                  Royal Bridal Lehengas
                 </Link>
               </li>
               <li>
-                <Link href="/collections/Bridal%20Wear" className="text-stone-400 hover:text-white transition">
-                  Bridal & Wedding Lehengas
+                <Link href="/collections/sarees" className="hover:text-stone-950 transition">
+                  Pure Banarasi Weaves
                 </Link>
               </li>
               <li>
-                <Link href="/collections/Saree" className="text-stone-400 hover:text-white transition">
-                  Pure Banarasi & Dola Silk Sarees
+                <Link href="/collections/kurti-sets" className="hover:text-stone-950 transition">
+                  Bespoke Anarkali Suits
                 </Link>
               </li>
               <li>
-                <Link href="/collections/Suit%20Set" className="text-stone-400 hover:text-white transition">
-                  Sharara & Palazzo Sets
-                </Link>
-              </li>
-              <li>
-                <Link href="/collections/Stitching%20Job" className="text-stone-400 hover:text-white transition">
-                  Custom Blouse & Fall-Pico Stitching
-                </Link>
-              </li>
-              <li>
-                <Link href="/collections/undergarments" className="text-stone-400 hover:text-white transition">
-                  Undergarments & Lingerie
+                <Link href="/collections/purses" className="hover:text-stone-950 transition">
+                  Handcrafted Potlis
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Col 3: Customer Care & Policy */}
+          {/* Archive Status */}
           <div className="space-y-3">
-            <h4 className="text-xs font-bold uppercase tracking-widest text-white border-b border-stone-800 pb-2">
-              Customer Support
-            </h4>
-            <ul className="space-y-2 text-xs text-stone-400">
-              <li>🚚 Free Insured Shipping Across India</li>
-              <li>🔄 7 Days Easy Size & Color Exchange</li>
-              <li>💳 Prepaid (UPI / NetBanking) & COD Available</li>
-              <li>
-                <a
-                  href={`https://api.whatsapp.com/send?phone=${SITE_CONFIG.whatsappNumber}&text=Track%20Order`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-white transition"
-                >
-                  📦 Track Order on WhatsApp
-                </a>
-              </li>
-              <li>⭐ 100% Genuine Handloom Quality Guarantee</li>
-            </ul>
-          </div>
-
-          {/* Col 4: Haridwar Showroom */}
-          <div className="space-y-3">
-            <h4 className="text-xs font-bold uppercase tracking-widest text-white border-b border-stone-800 pb-2">
-              Haridwar Showroom
-            </h4>
-            <div className="space-y-2.5 text-xs text-stone-400">
-              <div className="flex items-start gap-2">
-                <MapPin className="w-4 h-4 text-[#e02b37] shrink-0 mt-0.5" />
-                <span>
-                  {SITE_CONFIG.address.street}, Near Shivalik Nagar, Haridwar, Uttarakhand - 249401
-                </span>
+            <span className="text-[10px] font-mono font-bold tracking-[0.25em] uppercase text-stone-400 block">
+              ATELIER STATUS
+            </span>
+            <div className="p-3 rounded-xl bg-stone-50 border border-stone-200/60 space-y-2 text-[11px] font-mono">
+              <div className="flex items-center gap-1.5 text-emerald-700 font-bold">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span>SALON ACTIVE</span>
               </div>
-              <div className="flex items-center gap-2">
-                <Phone className="w-4 h-4 text-[#e02b37] shrink-0" />
-                <a href="tel:+917464987898" className="hover:text-white transition">
-                  +91 74649 87898 / +91 97607 78479
-                </a>
-              </div>
-              <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4 text-[#e02b37] shrink-0" />
-                <span>Open All 7 Days: 10:00 AM – 8:30 PM</span>
-              </div>
-              <div className="pt-2">
-                <a
-                  href={`https://api.whatsapp.com/send?phone=${SITE_CONFIG.whatsappNumber}&text=Namaste%20Indu%20Ji!`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-700 hover:bg-emerald-600 text-white rounded text-xs font-bold transition"
-                >
-                  <span>Chat with Showroom Owner</span>
-                </a>
-              </div>
+              <p className="text-stone-500 text-[10px]">
+                Indu Sharma Atelier • Arya Nagar Chowk, Haridwar
+              </p>
             </div>
           </div>
         </div>
 
-        {/* Bottom Bar */}
-        <div className="pt-8 border-t border-stone-800 flex flex-col sm:flex-row items-center justify-between text-xs text-stone-500 gap-3">
-          <p>© {new Date().getFullYear()} Rajnandini Boutique Haridwar. All Rights Reserved.</p>
-          <div className="flex items-center gap-4">
-            <Link
-              href="/admin"
-              className="text-stone-400 hover:text-white transition flex items-center gap-1.5 text-[11px] bg-stone-900/80 px-2.5 py-1 rounded border border-stone-800 hover:border-stone-700"
-            >
-              <Lock className="w-3 h-3 text-[#e02b37]" />
-              <span>Store Admin Portal</span>
+        {/* Bottom Legal / Policy Bar (Matching Image 4) */}
+        <div className="pt-8 border-t border-stone-200/80 flex flex-col sm:flex-row items-center justify-between text-[10px] font-mono tracking-wider uppercase text-stone-400 gap-4">
+          <div className="flex flex-wrap items-center justify-center gap-6">
+            <Link href="/about" className="hover:text-stone-900 transition">
+              AUTHENTICATION CERTIFICATE
             </Link>
-            <div className="flex items-center gap-1 text-[11px] text-stone-400">
-              <span>Made with</span>
-              <Heart className="w-3.5 h-3.5 text-[#e02b37] fill-[#e02b37]" />
-              <span>for Indian Ethnic Couture</span>
-            </div>
+            <Link href="/about" className="hover:text-stone-900 transition">
+              CLIENT PRIVACY
+            </Link>
+            <Link href="/about" className="hover:text-stone-900 transition">
+              ARCHIVE POLICY
+            </Link>
           </div>
+
+          <span className="text-stone-500 text-center sm:text-right">
+            © 2026 RAJNANDINI ATELIER. ALL RIGHTS RESERVED.
+          </span>
         </div>
       </div>
     </footer>
